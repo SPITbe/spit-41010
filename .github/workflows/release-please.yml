@@ -27,6 +27,8 @@ jobs:
           manifest-file: .release-please-manifest.json
       - name: Build app
         if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           npm ci
           npm run build
