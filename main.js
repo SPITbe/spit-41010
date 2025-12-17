@@ -31,7 +31,7 @@ const toolMenu = Menu.buildFromTemplate([
     {
         label: 'Fichiers',
         submenu: [
-            {label: 'Importer liste json', accelerator: 'CmdOrCtrl+J', click: () => {
+            {label: 'Importer liste json', accelerator: 'CmdOrCtrl+I', click: () => {
                 BrowserWindow.getFocusedWindow().webContents.send('import-json');
             }},
             {label: 'Basculer la recherche', accelerator: 'CmdOrCtrl+F', click: () => {
