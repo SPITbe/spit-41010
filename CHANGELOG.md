@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.4.1...spit-41010-v1.5.0) (2025-12-17)
+
+
+### Features
+
+* add ID generator functionality and integrate with the main menu ([6942dbb](https://github.com/SPITbe/spit-41010/commit/6942dbb6d87b31f661f20f002cdd9b0ad8dee524))
+* add search functionality and JSON import options in the UI ([0128d70](https://github.com/SPITbe/spit-41010/commit/0128d70e52bc61f1473648f23ff8482b9e534933))
+
 ## [1.4.1](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.4.0...spit-41010-v1.4.1) (2025-12-17)
 
 
