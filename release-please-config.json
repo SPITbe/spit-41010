@@ -1,21 +1,6 @@
 {
+  "release-type": "node",
   "packages": {
-    ".": {
-      "release-type": "node",
-      "bump-minor-pre-major": true,
-      "changelog-path": "CHANGELOG.md",
-      "include-component-in-tag": false,
-      "pull-request-title-pattern": "chore: release ${version}",
-      "extra-files": [
-        "README.md",
-        "package.json",
-        "index.html",
-        "style.css",
-        "main.js",
-        "preload.js",
-        "list-apps.json",
-        "LICENSE"
-      ]
-    }
+    ".": {}
   }
 }
