@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.2.0...spit-41010-v1.2.1) (2025-12-17)
+
+
+### Bug Fixes
+
+* add missing environment variable for GH_TOKEN in build step ([ea84116](https://github.com/SPITbe/spit-41010/commit/ea841160a7f41a044d9ca43434e3901b93c15c74))
+
 ## [1.2.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.1.0...spit-41010-v1.2.0) (2025-12-17)
 
 
