@@ -17,7 +17,25 @@ jobs:
         with:
           node-version: 20
       - name: Release Please
-        uses: google-github-actions/release-please-action@v4
+        id: release
+        uses: googleapis/release-please-action@v4
         with:
-          config-file: .release-please-config.yaml
           manifest-file: .release-please-manifest.json
+      - name: Build app
+        if: steps.release.outputs.release_created == 'true'
+        run: |
+          npm ci
+          npm run build
+      - name: Upload build artifact
+        if: steps.release.outputs.release_created == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: spit-launcher-build
+          path: dist/
+      - name: Attach build to GitHub Release
+        if: steps.release.outputs.release_created == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**
+          tag_name: ${{ steps.release.outputs.tag_name }}
+          body: ${{ steps.release.outputs.release_notes }}
