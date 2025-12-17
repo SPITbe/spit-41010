@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.3.0...spit-41010-v1.4.0) (2025-12-17)
+
+
+### Features
+
+* add JSON import handling in preload and main processes ([928de56](https://github.com/SPITbe/spit-41010/commit/928de56ba236806db98b0402b6edca6b743cf4d7))
+
 ## [1.3.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.2.1...spit-41010-v1.3.0) (2025-12-17)
 
 
