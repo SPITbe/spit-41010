@@ -1,9 +1,8 @@
-
-# SPIT Launcher
-
 <p align="center">
 	<img src="https://img.shields.io/badge/Projet-SPIT%20Launcher-32455B?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Projet SPIT Launcher" />
 </p>
+
+# SPIT Launcher
 
 Application Electron pour ouvrir rapidement vos projets (frontend/backend) dans VSCode et accéder à leurs dépôts GitHub, à partir d'une configuration JSON personnalisable.
 
