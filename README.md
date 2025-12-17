@@ -61,6 +61,7 @@ L'application s'ouvre automatiquement. Configurez le chemin du fichier JSON au p
 
 ---
 
+
 ## ⚙️ Configuration du fichier JSON
 
 Le fichier de configuration doit être un JSON de la forme :
@@ -83,7 +84,18 @@ Le fichier de configuration doit être un JSON de la forme :
 ```
 
 - Placez ce fichier où vous voulez, puis sélectionnez-le dans l'app (Ctrl+J).
-- Les dossiers VSCode doivent suivre la convention `spit-<appId>-frontend`, `spit-<appId>-backend` ou simplement `spit-<appId>` dans `D:/GitHub/`.
+- Par défaut, les dossiers VSCode doivent suivre la convention `spit-<appId>-frontend`, `spit-<appId>-backend` ou simplement `spit-<appId>`,
+  et être placés dans le dossier parent configuré dans le code (exemple : `D:/GitHub/`, mais ce chemin est personnalisable selon vos besoins).
+
+---
+
+## 🔧 Personnalisation du préfixe des dossiers
+
+Vous pouvez adapter le préfixe utilisé pour les dossiers VSCode (par défaut `spit-`).
+
+- Pour cela, modifiez la variable `const prefix = 'spit-'` dans le code source (`index.html` ou `preload.js` selon votre logique).
+- Exemple : pour utiliser le préfixe `myproj-`, remplacez simplement la valeur par `const prefix = 'myproj-'`.
+- Les conventions de nommage deviendront alors `myproj-<appId>-frontend`, `myproj-<appId>-backend` ou `myproj-<appId>`.
 
 ---
 
