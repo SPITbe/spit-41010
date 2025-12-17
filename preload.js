@@ -20,5 +20,8 @@ contextBridge.exposeInMainWorld('api', {
     },
     onImportJson: (callback) => {
         ipcRenderer.on('import-json', callback);
+    },
+    onToggleSearch: (callback) => {
+        ipcRenderer.on('toggle-search', (event, value) => callback(value));
     }
 });

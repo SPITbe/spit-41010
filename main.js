@@ -31,11 +31,14 @@ const toolMenu = Menu.buildFromTemplate([
     {
         label: 'Fichiers',
         submenu: [
-            {label: 'Importer liste json', click: () => {
+            {label: 'Importer liste json', accelerator: 'CmdOrCtrl+J', click: () => {
                 BrowserWindow.getFocusedWindow().webContents.send('import-json');
             }},
+            {label: 'Basculer la recherche', accelerator: 'CmdOrCtrl+F', click: () => {
+                BrowserWindow.getFocusedWindow().webContents.send('toggle-search');
+            }},
             {type: 'separator'},
-            {role: 'quit', label: 'Quitter'}
+            {role: 'quit', accelerator: 'CmdOrCtrl+W', label: 'Quitter'}
         ],
     },
     {
