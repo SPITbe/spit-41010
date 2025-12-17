@@ -1,5 +1,5 @@
 <p align="center">
-	<img src="https://img.shields.io/badge/Projet-SPIT%20Launcher-32455B?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Projet SPIT Launcher" />
+	<img src="https://img.shields.io/badge/Projet-SPIT%20Launcher-32455B?style=for-the-badge&logo=electron&logoColor=white" alt="Projet SPIT Launcher" />
 </p>
 
 # SPIT Launcher
