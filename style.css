@@ -39,6 +39,14 @@ h2 {
     align-items: center;
 }
 
+.tile-light {
+    color: #222 !important;
+}
+.tile-light h3 {
+    color: #222 !important;
+    border-color: #222 !important;
+}
+
 .tile:hover {
     transform: translateY(-8px) scale(1.03);
     box-shadow: 0 16px 40px 0 rgba(31, 38, 135, 0.45);
