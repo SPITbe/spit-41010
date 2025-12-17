@@ -22,5 +22,13 @@
   "devDependencies": {
     "electron": "^39.2.7",
     "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "be.spit.spit-launcher",
+    "productName": "SPIT Launcher",
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    }
   }
 }
