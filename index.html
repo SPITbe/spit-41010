@@ -45,6 +45,9 @@
                         showPathConfig();
                     }
                 });
+                    if (window.api && window.api.onImportJson) {
+                        window.api.onImportJson(() => showPathConfig());
+                    }
                 if (!localStorage.getItem('jsonPath')) {
                     showPathConfig();
                 } else {

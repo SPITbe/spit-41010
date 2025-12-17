@@ -59,8 +59,6 @@ const toolMenu = Menu.buildFromTemplate([
     }
 ])
 
-
-// Handler pour exposer la version au renderer (doit être enregistré avant tout usage)
 ipcMain.handle('get-version', () => version);
 
 Menu.setApplicationMenu(toolMenu);

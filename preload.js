@@ -17,5 +17,8 @@ contextBridge.exposeInMainWorld('api', {
     },
     getVersion: async () => {
         return await ipcRenderer.invoke('get-version');
+    },
+    onImportJson: (callback) => {
+        ipcRenderer.on('import-json', callback);
     }
 });
