@@ -3,6 +3,13 @@ const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs');
 
+let version = '';
+try {
+    const pkgPath = path.join(__dirname, 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    version = pkg.version;
+} catch (e) {}
+
 function createWindow() {
     const launcher = new BrowserWindow({
         width: 900,
@@ -35,7 +42,7 @@ const toolMenu = Menu.buildFromTemplate([
                 dialog.showMessageBox({
                     type: 'info',
                     title: 'À propos de SPIT Launcher',
-                    message: `SPIT Launcher\nVersion ${VER}\n\nDéveloppé par SPIT.\nTous droits réservés.`,
+                    message: `SPIT Launcher\nVersion ${version}\n\nDéveloppé par SPIT.\nTous droits réservés.`,
                     buttons: ['OK']
                 });
             }},
@@ -48,6 +55,10 @@ const toolMenu = Menu.buildFromTemplate([
         ]
     }
 ])
+
+
+// Handler pour exposer la version au renderer (doit être enregistré avant tout usage)
+ipcMain.handle('get-version', () => version);
 
 Menu.setApplicationMenu(toolMenu);
 

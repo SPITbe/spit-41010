@@ -7,6 +7,9 @@
     <body>
         <h2>SPIT Launcher</h2>
         <div id="tiles"></div>
+        <footer style="text-align:center;margin-top:40px;color:#aaa;font-size:0.95em;">
+            <span>VER <span id="ver"></span></span>
+        </footer>
         <script>
             const container = document.getElementById('tiles');
                 function getJsonPath() {
@@ -81,6 +84,13 @@
                             });
                         });
                 }
+        </script>
+        <script>
+            (async () => {
+                if (window.api.getVersion) {
+                    document.getElementById('ver').textContent = await window.api.getVersion();
+                }
+            })();
         </script>
     </body>
 </html>
