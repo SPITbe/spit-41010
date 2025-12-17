@@ -1,0 +1,26 @@
+{
+  "name": "spit-41010",
+  "version": "1.0.0",
+  "description": "Launcher in VSCode for Apps",
+  "homepage": "https://github.com/SPITbe/spit-41010#readme",
+  "bugs": {
+    "url": "https://github.com/SPITbe/spit-41010/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SPITbe/spit-41010.git"
+  },
+  "license": "MIT",
+  "author": "SPIT",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12"
+  }
+}
