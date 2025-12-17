@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.5.0...spit-41010-v1.6.0) (2025-12-17)
+
+
+### Features
+
+* display application version in the footer ([8d5a1c2](https://github.com/SPITbe/spit-41010/commit/8d5a1c2427f74fd309e686dd7e1946f6f4770c4a))
+
 ## [1.5.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.4.1...spit-41010-v1.5.0) (2025-12-17)
 
 
