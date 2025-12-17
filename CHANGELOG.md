@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.2.1...spit-41010-v1.3.0) (2025-12-17)
+
+
+### Features
+
+* add release workflow for automated builds and uploads ([271ae92](https://github.com/SPITbe/spit-41010/commit/271ae9299d9e04bd7c8fde7c4e246f54521f41c1))
+
 ## [1.2.1](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.2.0...spit-41010-v1.2.1) (2025-12-17)
 
 
