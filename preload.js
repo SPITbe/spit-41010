@@ -1,8 +1,9 @@
 const { contextBridge, shell, ipcRenderer } = require('electron');
 const username = 'SPITbe';
+const PROJECT_PREFIX = 'spit-';
 contextBridge.exposeInMainWorld('api', {
     openGitHubRepo: (appId) => {
-        const url = `https://github.com/${username}/${appId}`;
+        const url = `https://github.com/${username}/${PROJECT_PREFIX}${appId}`;
         ipcRenderer.send('open-github', url);
     },
     openVSCode: (folder) => {

@@ -1,7 +1,10 @@
+
 const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs');
+
+const PROJECT_PREFIX = process.env.PROJECT_PREFIX || 'spit-';
 
 let version = '';
 try {
@@ -62,18 +65,21 @@ ipcMain.handle('get-version', () => version);
 
 Menu.setApplicationMenu(toolMenu);
 
+
 ipcMain.on('open-vscode', (event, folder) => {
-        const absolutePath = path.join('D:/GitHub/', `spit-${folder}`);
-        exec(`code "${absolutePath}"`);
+    const absolutePath = path.join('D:/GitHub/', `${PROJECT_PREFIX}${folder}`);
+    exec(`code "${absolutePath}"`);
 });
 
 ipcMain.handle('check-dirs', (event, appId) => {
     const base = 'D:/GitHub/';
-    const frontend = path.join(base, `spit-${appId}-frontend`);
-    const backend = path.join(base, `spit-${appId}-backend`);
+    const frontend = path.join(base, `${PROJECT_PREFIX}${appId}-frontend`);
+    const backend = path.join(base, `${PROJECT_PREFIX}${appId}-backend`);
+    const root = path.join(base, `${PROJECT_PREFIX}${appId}`);
     return {
         frontend: fs.existsSync(frontend),
-        backend: fs.existsSync(backend)
+        backend: fs.existsSync(backend),
+        root: fs.existsSync(root)
     };
 });
 
