@@ -83,7 +83,7 @@ Le fichier de configuration doit être un JSON de la forme :
 ```
 
 - Placez ce fichier où vous voulez, puis sélectionnez-le dans l'app (Ctrl+J).
-- Les dossiers VSCode doivent suivre la convention `spit-<appId>-frontend` et/ou `spit-<appId>-backend` dans `D:/GitHub/`.
+- Les dossiers VSCode doivent suivre la convention `spit-<appId>-frontend`, `spit-<appId>-backend` ou simplement `spit-<appId>` dans `D:/GitHub/`.
 
 ---
 
