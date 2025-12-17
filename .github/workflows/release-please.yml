@@ -1,4 +1,4 @@
-name: Release Please
+name: 📦 Release
 
 on:
   push:
@@ -14,18 +14,18 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 🔎 Checkout
         uses: actions/checkout@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Release Please
+      - name: 🚀 Release Please
         id: release
         uses: googleapis/release-please-action@v4
         with:
           manifest-file: .release-please-manifest.json
-      - name: Build app
+      - name: 🏗️ Build app
         if: steps.release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -45,7 +45,7 @@ jobs:
           zip -r ../spit-launcher-${{ steps.release.outputs.tag_name }}.zip .
           cd ..
 
-      - name: Upload Release Asset
+      - name: 📤 Upload Release Asset
         if: steps.release.outputs.release_created == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
