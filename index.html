@@ -147,5 +147,12 @@
                 });
             }
         </script>
+        <script>
+        (async () => {
+            if (window.api && window.api.getVersion) {
+                document.getElementById('ver').textContent = await window.api.getVersion();
+            }
+        })();
+        </script>
     </body>
 </html>
