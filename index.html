@@ -79,6 +79,8 @@
                                 } else if (exists.root) {
                                     vscodeBtns += `<button class='vsc-btn' onclick=\"window.api.openVSCode('${app.appId}')\">${vscodeLogo} Ouvrir VSCode</button>`;
                                     githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${PROJECT_PREFIX}${app.appId}')\">${githubLogo} GitHub</button>`;
+                                } else {
+                                    githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${PROJECT_PREFIX}${app.appId}')\">${githubLogo} GitHub</button>`;
                                 }
                                 tile.innerHTML = `
                                     <h3>${app.application}</h3>
