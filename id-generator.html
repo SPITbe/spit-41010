@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Générateur d'ID (5 chiffres)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="background:#232526;">
+    <div style="text-align:center;margin:32px auto 0 auto;max-width:420px;background:#232526;padding:24px 18px 18px 18px;border-radius:12px;box-shadow:0 2px 12px #0003;">
+        <h2 style="margin-bottom:12px;">Générateur d'ID (5 chiffres)</h2>
+        <div style="margin-bottom:10px;">
+            <label for="id-count" style="margin-right:8px;">Nombre d'ID à générer :</label>
+            <input id="id-count" type="number" min="1" max="100" value="1" style="width:60px;padding:4px 8px;border-radius:5px;border:1px solid #888;font-size:1rem;">
+            <button id="generate-ids-btn" style="padding:7px 16px;margin-left:10px;border-radius:5px;background:#1976d2;color:#fff;border:none;font-size:1rem;cursor:pointer;">Générer</button>
+        </div>
+        <textarea id="generated-ids" rows="4" readonly style="width:90%;min-width:180px;max-width:350px;padding:8px;border-radius:6px;border:1px solid #888;font-size:1.1rem;resize:vertical;"></textarea>
+        <br>
+        <button id="copy-ids-btn" style="padding:6px 18px;margin-top:8px;border-radius:5px;background:#1976d2;color:#fff;border:none;font-size:1rem;cursor:pointer;">Copier</button>
+    </div>
+    <script>
+    function generateIds(count) {
+        const ids = [];
+        for (let i = 0; i < count; i++) {
+            let id = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+            ids.push(id);
+        }
+        return ids;
+    }
+    const generateBtn = document.getElementById('generate-ids-btn');
+    const copyBtn = document.getElementById('copy-ids-btn');
+    const idCountInput = document.getElementById('id-count');
+    const idsTextarea = document.getElementById('generated-ids');
+    if (generateBtn && copyBtn && idCountInput && idsTextarea) {
+        generateBtn.onclick = () => {
+            let count = parseInt(idCountInput.value, 10);
+            if (isNaN(count) || count < 1) count = 1;
+            if (count > 100) count = 100;
+            const ids = generateIds(count);
+            idsTextarea.value = ids.join('\n');
+        };
+        copyBtn.onclick = () => {
+            idsTextarea.select();
+            document.execCommand('copy');
+        };
+    }
+    </script>
+</body>
+</html>

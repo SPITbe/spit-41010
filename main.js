@@ -37,6 +37,9 @@ const toolMenu = Menu.buildFromTemplate([
             {label: 'Basculer la recherche', accelerator: 'CmdOrCtrl+F', click: () => {
                 BrowserWindow.getFocusedWindow().webContents.send('toggle-search');
             }},
+            {label: 'Ouvrir générateur d\'ID', accelerator: 'CmdOrCtrl+G', click: () => {
+                openIdGeneratorWindow();
+            }},
             {type: 'separator'},
             {role: 'quit', accelerator: 'CmdOrCtrl+W', label: 'Quitter'}
         ],
@@ -83,6 +86,34 @@ ipcMain.handle('check-dirs', (event, appId) => {
         root: fs.existsSync(root)
     };
 });
+
+
+let idGenWindow = null;
+function openIdGeneratorWindow() {
+    if (idGenWindow && !idGenWindow.isDestroyed()) {
+        idGenWindow.focus();
+        return;
+    }
+    idGenWindow = new BrowserWindow({
+        width: 400,
+        height: 350,
+        title: 'Générateur d\'ID',
+        resizable: true,
+        minimizable: true,
+        maximizable: false,
+        parent: null,
+        modal: false,
+        icon: path.join(__dirname,'icon.png'),
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: false,
+            contextIsolation: true
+        }
+    });
+    idGenWindow.setMenu(null);
+    idGenWindow.loadFile('id-generator.html');
+    idGenWindow.on('closed', () => { idGenWindow = null; });
+}
 
 app.whenReady().then(() => {
     createWindow();
