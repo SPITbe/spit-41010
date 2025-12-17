@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.1](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.4.0...spit-41010-v1.4.1) (2025-12-17)
+
+
+### Bug Fixes
+
+* add light color detection for tiles and update styles for better visibility ([d9994ac](https://github.com/SPITbe/spit-41010/commit/d9994ac0ec4923adf27311cea72babb85ff08121))
+* ensure GitHub button is always displayed for applications ([bc37734](https://github.com/SPITbe/spit-41010/commit/bc377342f2f6976467def98203ac6dacd5175a0b))
+* remove PROJECT_PREFIX for GitHub button URLs to simplify app ID usage ([d8571b9](https://github.com/SPITbe/spit-41010/commit/d8571b91f4d4b01aef0df207582102d2f7ca8fef))
+
 ## [1.4.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.3.0...spit-41010-v1.4.0) (2025-12-17)
 
 
