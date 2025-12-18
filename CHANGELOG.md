@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.7.0...spit-41010-v1.8.0) (2025-12-18)
+
+
+### Features
+
+* enhance tile layout with new header and main sections, improve button styles ([7fd89c5](https://github.com/SPITbe/spit-41010/commit/7fd89c55ef867bcf0ff275e2408a6e0dac363b66))
+
 ## [1.7.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.6.0...spit-41010-v1.7.0) (2025-12-18)
 
 
