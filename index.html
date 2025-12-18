@@ -153,10 +153,13 @@
                         }
                     }
                     tile.innerHTML = `
-                        <h3>${app.application}</h3>
-                        <span class='badge'>${app.clientId}</span>
-                        <div class='btn-group'>${vscodeBtns}</div>
-                        <div class='btn-group'>${githubBtns}</div>
+                        <div class='tile-header'><a href='#' class='build-btn' title='Build' onclick="event.stopPropagation();event.preventDefault();alert('Build ${app.application}')">📦</a></div>
+                        <div class='tile-main'>
+                            <h3>${app.application}</h3>
+                            <span class='badge'>${app.clientId}</span>
+                            <div class='btn-group'>${vscodeBtns}</div>
+                            <div class='btn-group'>${githubBtns}</div>
+                        </div>
                         <div class='tile-footer'>${frameworkBadge}</div>
                     `;
                     container.appendChild(tile);
