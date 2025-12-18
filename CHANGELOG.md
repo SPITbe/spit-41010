@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.6.0...spit-41010-v1.7.0) (2025-12-18)
+
+
+### Features
+
+* add framework badges to application tiles ([eb32d62](https://github.com/SPITbe/spit-41010/commit/eb32d62d690660e8bf1bf1dc4500cb290b568b0d))
+
 ## [1.6.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.5.0...spit-41010-v1.6.0) (2025-12-17)
 
 
