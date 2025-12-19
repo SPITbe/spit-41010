@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.9.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.8.0...spit-41010-v1.9.0) (2025-12-19)
+
+
+### Features
+
+* add buildElectron function to support Electron app builds ([82f1531](https://github.com/SPITbe/spit-41010/commit/82f1531334422d43523f6121df5c452c72cd871d))
+* add cancellation option for build script selection in buildAngular function ([9176d10](https://github.com/SPITbe/spit-41010/commit/9176d10a46291157f54941a61686be30c67828d8))
+* add new dependencies and enhance preload.js API ([81563f2](https://github.com/SPITbe/spit-41010/commit/81563f2e0416b8d36ba559a7562550557f896c41))
+* enhance framework badge rendering to support multiple frameworks ([396c2d7](https://github.com/SPITbe/spit-41010/commit/396c2d73c74bb6e7f730f00b4bbf02f69eb85377))
+
 ## [1.8.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.7.0...spit-41010-v1.8.0) (2025-12-18)
 
 
