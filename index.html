@@ -158,9 +158,19 @@ async function renderTiles(apps) {
 
         const vscodeLogo = `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 32 32' style='vertical-align:middle'><path fill='#fff' d='M30.23 6.18L24.09 3.1a2.13 2.13 0 0 0-2.09 0L7.91 11.36l-3.2-2.5a1.07 1.07 0 0 0-1.36.06l-2.1 2a1.07 1.07 0 0 0 0 1.56l3.13 2.7l-3.13 2.7a1.07 1.07 0 0 0 0 1.56l2.1 2a1.07 1.07 0 0 0 1.36.06l3.2-2.5l14.09 8.26a2.13 2.13 0 0 0 2.09 0l6.14-3.08A2.13 2.13 0 0 0 32 22.08V8.92a2.13 2.13 0 0 0-1.77-2.74zM24 25.13L8.36 16L24 6.87z'/></svg>`;
         const githubLogo = `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' style='vertical-align:middle'><path fill='#fff' d='M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504c.5.092.682-.217.682-.482c0-.237-.009-.868-.014-1.703c-2.782.605-3.369-1.342-3.369-1.342c-.454-1.158-1.11-1.466-1.11-1.466c-.908-.62.069-.608.069-.608c1.004.07 1.532 1.032 1.532 1.032c.892 1.53 2.341 1.088 2.91.832c.092-.647.35-1.088.636-1.339c-2.221-.253-4.555-1.113-4.555-4.951c0-1.093.39-1.988 1.029-2.688c-.103-.253-.446-1.272.098-2.65c0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337c1.909-1.295 2.748-1.025 2.748-1.025c.546 1.378.202 2.397.1 2.65c.64.7 1.028 1.595 1.028 2.688c0 3.848-2.337 4.695-4.566 4.944c.359.309.678.919.678 1.852c0 1.336-.012 2.415-.012 2.744c0 .267.18.578.688.48A10.025 10.025 0 0 0 22 12.021C22 6.484 17.523 2 12 2'/></svg>`;
+        const folderLogo = `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' style='vertical-align:middle'><path fill='#fff' d='M10.414 4l2 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm9.586 4H4v10h16z' opacity='.4'/><path fill='#fff' d='M2 8v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8zm2 10V8h16v10z'/></svg>`;
 
         const exists = await window.api.checkDirs(app.appId);
-        let vscodeBtns = '', githubBtns = '';
+        let vscodeBtns = '', githubBtns = '', folderBtns = '';
+        if (exists.frontend) {
+            folderBtns += `<button class='folder-btn' onclick="window.api.openAppFolder('${app.appId}-frontend')">${folderLogo} Folder Frontend</button>`;
+        }
+        if (exists.backend) {
+            folderBtns += `<button class='folder-btn' onclick="window.api.openAppFolder('${app.appId}-backend')">${folderLogo} Folder Backend</button>`;
+        }
+        if (exists.root) {
+            folderBtns += `<button class='folder-btn' onclick="window.api.openAppFolder('${app.appId}')">${folderLogo} Dossier</button>`;
+        }
 
         if (exists.frontend) {
             vscodeBtns += `<button class='vsc-btn' onclick="window.api.openVSCode('${app.appId}-frontend')">${vscodeLogo} VS Frontend</button>`;
@@ -229,6 +239,7 @@ async function renderTiles(apps) {
                 <span class='badge'>${app.clientId}</span>
                 <div class='btn-group'>${vscodeBtns}</div>
                 <div class='btn-group'>${githubBtns}</div>
+                <div class='btn-group'>${folderBtns}</div>
             </div>
             <div class='tile-footer'>${frameworkBadges.join('')}</div>
         `;

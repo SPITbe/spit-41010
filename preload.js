@@ -19,6 +19,11 @@ contextBridge.exposeInMainWorld('api', {
     buildApp: (appId, framework) => {
         ipcRenderer.send('build-app', appId, framework); 
     },
+    
+    openAppFolder: (folder) => {
+        if (typeof folder !== 'string') return;
+        ipcRenderer.send('open-app-folder', folder);
+    },
 
     /* ========= ASYNC ========= */
 
