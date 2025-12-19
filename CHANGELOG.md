@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.9.0...spit-41010-v1.10.0) (2025-12-19)
+
+
+### Features
+
+* add folder navigation buttons and IPC handler for opening app folders ([919a042](https://github.com/SPITbe/spit-41010/commit/919a042305768b78ff30f5106b0f7b5862bc32aa))
+
 ## [1.9.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.8.0...spit-41010-v1.9.0) (2025-12-19)
 
 
