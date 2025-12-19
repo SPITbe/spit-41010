@@ -175,43 +175,54 @@ async function renderTiles(apps) {
             githubBtns += `<button class='gh-btn' onclick="window.api.openGitHubRepo('${app.appId}')">${githubLogo} GitHub</button>`;
         }
 
-        // Framework badges
-        let frameworkBadge = '';
-        if (app.framework) {
-            const fwMap = {
-                'angular': {color:'dd0031',logo:'angular'},
-                'react': {color:'20232a',logo:'react',logoColor:'61dafb'},
-                'vue': {color:'42b883',logo:'vuedotjs'},
-                'electron': {color:'47848F',logo:'electron',logoColor:'white'},
-                'svelte': {color:'ff3e00',logo:'svelte'},
-                'node': {color:'339933',logo:'nodedotjs'},
-                'express': {color:'000000',logo:'express'},
-                'nestjs': {color:'e0234e',logo:'nestjs'},
-                'nextjs': {color:'000000',logo:'nextdotjs'},
-                'nuxt': {color:'00c58e',logo:'nuxtdotjs'},
-                'python': {color:'3776AB',logo:'python'},
-                'django': {color:'092e20',logo:'django'},
-                'flask': {color:'000000',logo:'flask'},
-                'symfony': {color:'000000',logo:'symfony'},
-                'laravel': {color:'ff2d20',logo:'laravel'},
-                'php': {color:'777bb4',logo:'php'},
-                'spring': {color:'6db33f',logo:'spring'},
-                'java': {color:'007396',logo:'java'},
-                'dotnet': {color:'512bd4',logo:'dotnet'}
-            };
+        // Framework badges (supporte frameworks[] ou framework)
+        let frameworkBadges = [];
+        const fwMap = {
+            'angular': {color:'dd0031',logo:'angular'},
+            'react': {color:'20232a',logo:'react',logoColor:'61dafb'},
+            'vue': {color:'42b883',logo:'vuedotjs'},
+            'electron': {color:'47848F',logo:'electron',logoColor:'white'},
+            'svelte': {color:'ff3e00',logo:'svelte'},
+            'node': {color:'339933',logo:'nodedotjs'},
+            'express': {color:'000000',logo:'express'},
+            'nestjs': {color:'e0234e',logo:'nestjs'},
+            'nextjs': {color:'000000',logo:'nextdotjs'},
+            'nuxt': {color:'00c58e',logo:'nuxtdotjs'},
+            'python': {color:'3776AB',logo:'python'},
+            'django': {color:'092e20',logo:'django'},
+            'flask': {color:'000000',logo:'flask'},
+            'symfony': {color:'000000',logo:'symfony'},
+            'laravel': {color:'ff2d20',logo:'laravel'},
+            'php': {color:'777bb4',logo:'php'},
+            'spring': {color:'6db33f',logo:'spring'},
+            'java': {color:'007396',logo:'java'},
+            'dotnet': {color:'512bd4',logo:'dotnet'}
+        };
+        if (Array.isArray(app.frameworks)) {
+            for (const fwName of app.frameworks) {
+                const fw = fwMap[fwName.toLowerCase()];
+                if (fw) {
+                    let badgeUrl = `https://img.shields.io/badge/${encodeURIComponent(fwName)}-${fw.color}?logo=${fw.logo}&style=for-the-badge`;
+                    if(fw.logoColor) badgeUrl += `&logoColor=${fw.logoColor}`;
+                    frameworkBadges.push(`<img src='${badgeUrl}' alt='${fwName}' style='max-width:80px;display:block;margin-bottom:2px;'/>`);
+                } else {
+                    frameworkBadges.push(`<span class='badge' style='background:#888;font-size:0.8em;'>${fwName}</span>`);
+                }
+            }
+        } else if (app.framework) {
             const fw = fwMap[app.framework.toLowerCase()];
             if (fw) {
                 let badgeUrl = `https://img.shields.io/badge/${encodeURIComponent(app.framework)}-${fw.color}?logo=${fw.logo}&style=for-the-badge`;
                 if(fw.logoColor) badgeUrl += `&logoColor=${fw.logoColor}`;
-                frameworkBadge = `<img src='${badgeUrl}' alt='${app.framework}' style='max-width:80px;display:block;'/>`;
+                frameworkBadges.push(`<img src='${badgeUrl}' alt='${app.framework}' style='max-width:80px;display:block;'/>`);
             } else {
-                frameworkBadge = `<span class='badge' style='background:#888;font-size:0.8em;'>${app.framework}</span>`;
+                frameworkBadges.push(`<span class='badge' style='background:#888;font-size:0.8em;'>${app.framework}</span>`);
             }
         }
 
         tile.innerHTML = `
             <div class='tile-header'>
-                <a href='#' class='build-btn' title='Build' onclick="event.preventDefault();showLoading();window.api.buildApp('${app.appId}', '${app.framework}')">📦</a>
+                <a href='#' class='build-btn' title='Build' onclick="event.preventDefault();showLoading();window.api.buildApp('${app.appId}', '${app.framework || (app.frameworks ? app.frameworks[0] : '')}')">📦</a>
             </div>
             <div class='tile-main'>
                 <h3>${app.application}</h3>
@@ -219,7 +230,7 @@ async function renderTiles(apps) {
                 <div class='btn-group'>${vscodeBtns}</div>
                 <div class='btn-group'>${githubBtns}</div>
             </div>
-            <div class='tile-footer'>${frameworkBadge}</div>
+            <div class='tile-footer'>${frameworkBadges.join('')}</div>
         `;
         container.appendChild(tile);
     }
