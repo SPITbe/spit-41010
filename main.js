@@ -141,6 +141,10 @@ ipcMain.on('build-app', async (event, appId, framework) => {
                 const buildAngular = require('./build-angular');
                 await buildAngular(appId, win)
                 break;
+            case 'electron':
+                const buildElectron = require('./build-electron');
+                await buildElectron(appId, win)
+                break;
             default:
                 throw new Error('Framework de build inconnu');
         }
