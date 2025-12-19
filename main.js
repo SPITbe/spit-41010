@@ -1,137 +1,187 @@
-
 const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require('electron');
 const path = require('path');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 const fs = require('fs');
+const archiver = require('archiver');
+const open = require('open'); 
 
 const PROJECT_PREFIX = process.env.PROJECT_PREFIX || 'spit-';
+const BASE_DIR = process.env.SPIT_BASE_DIR || 'D:/GitHub/';
 
 let version = '';
 try {
-    const pkgPath = path.join(__dirname, 'package.json');
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf-8'));
     version = pkg.version;
-} catch (e) {}
+} catch {}
+
+let mainWindow = null;
+let idGenWindow = null;
 
 function createWindow() {
-    const launcher = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 900,
         height: 600,
         title: 'SPIT Launcher',
-        icon: path.join(__dirname,'icon.png'),
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-        }
-    });
-
-    launcher.loadFile('index.html');
-}
-
-const toolMenu = Menu.buildFromTemplate([
-    {
-        label: 'Fichiers',
-        submenu: [
-            {label: 'Importer liste json', accelerator: 'CmdOrCtrl+I', click: () => {
-                BrowserWindow.getFocusedWindow().webContents.send('import-json');
-            }},
-            {label: 'Basculer la recherche', accelerator: 'CmdOrCtrl+F', click: () => {
-                BrowserWindow.getFocusedWindow().webContents.send('toggle-search');
-            }},
-            {label: 'Ouvrir générateur d\'ID', accelerator: 'CmdOrCtrl+G', click: () => {
-                openIdGeneratorWindow();
-            }},
-            {type: 'separator'},
-            {role: 'quit', accelerator: 'CmdOrCtrl+W', label: 'Quitter'}
-        ],
-    },
-    {
-        label: 'A propos',
-        submenu: [
-            {label: 'À propos de SPIT Launcher', click: () => {
-                dialog.showMessageBox({
-                    type: 'info',
-                    title: 'À propos de SPIT Launcher',
-                    message: `SPIT Launcher\nVersion ${version}\n\nDéveloppé par SPIT.\nTous droits réservés.`,
-                    buttons: ['OK']
-                });
-            }},
-            {label: 'Visiter le dépôt GitHub', click: () => {
-                shell.openExternal('https://github.com/SPITbe/spit-41010');
-            }},
-            {label: 'Visiter le site de SPIT', click: () => {
-                shell.openExternal('https://sp-it.be');
-            }}
-        ]
-    }
-])
-
-ipcMain.handle('get-version', () => version);
-
-Menu.setApplicationMenu(toolMenu);
-
-
-ipcMain.on('open-vscode', (event, folder) => {
-    const absolutePath = path.join('D:/GitHub/', `${PROJECT_PREFIX}${folder}`);
-    exec(`code "${absolutePath}"`);
-});
-
-ipcMain.handle('check-dirs', (event, appId) => {
-    const base = 'D:/GitHub/';
-    const frontend = path.join(base, `${PROJECT_PREFIX}${appId}-frontend`);
-    const backend = path.join(base, `${PROJECT_PREFIX}${appId}-backend`);
-    const root = path.join(base, `${PROJECT_PREFIX}${appId}`);
-    return {
-        frontend: fs.existsSync(frontend),
-        backend: fs.existsSync(backend),
-        root: fs.existsSync(root)
-    };
-});
-
-
-let idGenWindow = null;
-function openIdGeneratorWindow() {
-    if (idGenWindow && !idGenWindow.isDestroyed()) {
-        idGenWindow.focus();
-        return;
-    }
-    idGenWindow = new BrowserWindow({
-        width: 400,
-        height: 350,
-        title: 'Générateur d\'ID',
-        resizable: true,
-        minimizable: true,
-        maximizable: false,
-        parent: null,
-        modal: false,
-        icon: path.join(__dirname,'icon.png'),
+        icon: path.join(__dirname, 'icon.png'),
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true
         }
     });
-    idGenWindow.setMenu(null);
-    idGenWindow.loadFile('id-generator.html');
-    idGenWindow.on('closed', () => { idGenWindow = null; });
+
+    mainWindow.loadFile('index.html');
 }
 
-app.whenReady().then(() => {
-    createWindow();
-})
+function safeSend(channel, payload) {
+    const win = BrowserWindow.getFocusedWindow() || mainWindow;
+    if (win && !win.isDestroyed()) {
+        win.webContents.send(channel, payload);
+    }
+}
 
-ipcMain.handle('open-file-dialog', async () => {
-    const result = await dialog.showOpenDialog({
-        title: 'Sélectionner un fichier JSON',
-        properties: ['openFile'],
-        filters: [
-            { name: 'JSON', extensions: ['json'] },
-            { name: 'Tous les fichiers', extensions: ['*'] }
+/* ================= MENU ================= */
+
+const toolMenu = Menu.buildFromTemplate([
+    {
+        label: 'Fichiers',
+        submenu: [
+            {
+                label: 'Importer liste json',
+                accelerator: 'CmdOrCtrl+I',
+                click: () => safeSend('import-json')
+            },
+            {
+                label: 'Basculer la recherche',
+                accelerator: 'CmdOrCtrl+F',
+                click: () => safeSend('toggle-search')
+            },
+            {
+                label: 'Ouvrir générateur d\'ID',
+                accelerator: 'CmdOrCtrl+G',
+                click: openIdGeneratorWindow
+            },
+            { type: 'separator' },
+            { role: 'quit', label: 'Quitter' }
         ]
+    },
+    {
+        label: 'À propos',
+        submenu: [
+            {
+                label: 'À propos de SPIT Launcher',
+                click: () => dialog.showMessageBox({
+                    type: 'info',
+                    title: 'À propos',
+                    message: `SPIT Launcher\nVersion ${version}\n\nDéveloppé par SPIT.`,
+                    buttons: ['OK']
+                })
+            },
+            {
+                label: 'Dépôt GitHub',
+                click: () => shell.openExternal('https://github.com/SPITbe/spit-41010')
+            },
+            {
+                label: 'Site SPIT',
+                click: () => shell.openExternal('https://sp-it.be')
+            }
+        ]
+    }
+]);
+
+Menu.setApplicationMenu(toolMenu);
+
+/* ================= IPC ================= */
+
+ipcMain.handle('get-version', () => version);
+
+ipcMain.on('open-vscode', (_, folder) => {
+    const absolutePath = path.join(BASE_DIR, `${PROJECT_PREFIX}${folder}`);
+    exec(`code "${absolutePath}"`, err => {
+        if (err) {
+            dialog.showErrorBox('Erreur VS Code', 'Impossible d’ouvrir VS Code.');
+        }
     });
-    if (result.canceled || !result.filePaths.length) return null;
-    return result.filePaths[0];
 });
 
-ipcMain.on('open-github', (event, url) => {
-    shell.openExternal(url);
+ipcMain.handle('check-dirs', (_, appId) => {
+    const root = path.join(BASE_DIR, `${PROJECT_PREFIX}${appId}`);
+    return {
+        frontend: fs.existsSync(`${root}-frontend`),
+        backend: fs.existsSync(`${root}-backend`),
+        root: fs.existsSync(root)
+    };
+});
+
+ipcMain.handle('open-folder-dialog', async () => {
+    const result = await dialog.showOpenDialog({
+        properties: ['openDirectory']
+    });
+    return result.canceled ? null : result.filePaths[0];
+});
+
+ipcMain.handle('save-apps-root', async (_, appsRoot) => {
+    try {
+        const configPath = path.join(app.getPath('userData'), 'spitconfig.json');
+        fs.writeFileSync(configPath, JSON.stringify({ appsRoot }, null, 2), 'utf8');
+        return true;
+    } catch {
+        return false;
+    }
+});
+
+
+ipcMain.on('build-app', async (event, appId, framework) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (!win) return;
+
+    try {
+        switch (framework) {
+            case 'angular':
+                const buildAngular = require('./build-angular');
+                await buildAngular(appId, win)
+                break;
+            default:
+                throw new Error('Framework de build inconnu');
+        }
+    }
+    catch (error) {
+        dialog.showErrorBox('Erreur', error?.message?.toString() || 'Erreur inconnue');
+    }
+});
+
+/* ================= ID GENERATOR ================= */
+
+function openIdGeneratorWindow() {
+    if (idGenWindow && !idGenWindow.isDestroyed()) {
+        return idGenWindow.focus();
+    }
+
+    idGenWindow = new BrowserWindow({
+        width: 400,
+        height: 350,
+        title: 'Générateur d\'ID',
+        icon: path.join(__dirname, 'icon.png'),
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: false,
+            contextIsolation: true
+        }
+    });
+
+    idGenWindow.setMenu(null);
+    idGenWindow.loadFile('id-generator.html');
+    idGenWindow.on('closed', () => idGenWindow = null);
+}
+
+/* ================= APP LIFECYCLE ================= */
+
+app.whenReady().then(createWindow);
+
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });

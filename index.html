@@ -1,195 +1,252 @@
 <!DOCTYPE html>
 <html lang="fr">
-    <head>
-        <title>SPIT Launcher</title>
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-        <h2 style="display:flex;align-items:center;justify-content:center;gap:16px;">
-            <img src="icon.png" alt="Logo SPIT" style="height:44px;width:44px;vertical-align:middle;"> SPIT Launcher
-        </h2>
-        <div id="search-bar-container" style="display:none;text-align:center;margin-top:24px;">
-            <input id="search-bar" type="text" placeholder="Rechercher par nom, appId ou clientId..." style="width:320px;padding:8px 12px;border-radius:6px;border:1px solid #888;font-size:1.1rem;">
-        </div>
-        <div id="tiles"></div>
-        <footer style="text-align:center;margin-top:40px;color:#aaa;font-size:0.95em;">
-            <span>VER <span id="ver"></span></span>
-        </footer>
-        <script>
-            const container = document.getElementById('tiles');
-            const searchBarContainer = document.getElementById('search-bar-container');
-            const searchBar = document.getElementById('search-bar');
-            let allApps = [];
-            let searchVisible = false;
+<head>
+    <meta charset="UTF-8">
+    <title>SPIT Launcher</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-            function getJsonPath() {
-                return localStorage.getItem('jsonPath') || './list-apps.json';
-            }
-            function setJsonPath(path) {
-                localStorage.setItem('jsonPath', path);
-                location.reload();
-            }
-            function showPathConfig() {
-                const configDiv = document.createElement('div');
-                configDiv.style = 'text-align:center;margin:40px auto;max-width:400px;padding:24px;background:#222;border-radius:10px;box-shadow:0 2px 12px #0003;';
-                configDiv.innerHTML = `
-                    <h3>Configurer le chemin du fichier JSON</h3>
-                    <input id='jsonPathInput' type='text' value="${getJsonPath()}" style='width:70%;padding:8px;border-radius:5px;border:1px solid #888;font-size:1rem;'>
-                    <button id='browseBtn' style='padding:7px 12px;margin-left:8px;border-radius:5px;background:#1976d2;color:#fff;border:none;font-size:1rem;cursor:pointer;'>Parcourir</button>
-                    <br><br>
-                    <button onclick="localStorage.setItem('jsonPath', document.getElementById('jsonPathInput').value); location.reload();" style='padding:7px 18px;border-radius:5px;background:#1976d2;color:#fff;border:none;font-size:1rem;cursor:pointer;'>Valider</button>
-                `;
-                document.body.innerHTML = '';
-                document.body.appendChild(configDiv);
-                document.getElementById('browseBtn').onclick = async () => {
-                    const file = await window.api.openFileDialog();
-                    if (file) {
-                        document.getElementById('jsonPathInput').value = file;
-                    }
-                };
-            }
-            document.addEventListener('keydown', e => {
-                if (e.ctrlKey && e.key.toLowerCase() === 'i') {
-                    showPathConfig();
-                }
-            });
-            if (window.api && window.api.onImportJson) {
-                window.api.onImportJson(() => showPathConfig());
-            }
+<h2 style="display:flex;align-items:center;justify-content:center;gap:16px;">
+    <img src="icon.png" alt="Logo SPIT" style="height:44px;width:44px;">
+    SPIT Launcher
+</h2>
 
-            if (window.api && window.api.onToggleSearch) {
-                window.api.onToggleSearch(() => {
-                    searchVisible = !searchVisible;
-                    searchBarContainer.style.display = searchVisible ? '' : 'none';
-                    if (!searchVisible) {
-                        searchBar.value = '';
-                        renderTiles(allApps);
-                    } else {
-                        searchBar.focus();
-                    }
-                });
-            }
+<div id="search-bar-container" style="display:none;text-align:center;margin-top:24px;">
+    <input id="search-bar" type="text" placeholder="Rechercher par nom, appId ou clientId..."
+           style="width:320px;padding:8px 12px;border-radius:6px;border:1px solid #888;font-size:1.1rem;">
+</div>
 
-            function filterApps(apps, query) {
-                if (!query) return apps;
-                const q = query.trim().toLowerCase();
-                return apps.filter(app =>
-                    (app.application && app.application.toLowerCase().includes(q)) ||
-                    (app.appId && app.appId.toLowerCase().includes(q)) ||
-                    (app.clientId && app.clientId.toLowerCase().includes(q))
-                );
-            }
+<div id="tiles"></div>
 
-            async function renderTiles(apps) {
-                container.innerHTML = '';
-                for (const app of apps) {
-                    const tile = document.createElement('div');
-                    tile.className = 'tile';
-                    tile.style.backgroundColor = app.color;
-                    function isLightColor(hex) {
-                        if (!hex) return false;
-                        let c = hex.replace('#','');
-                        if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
-                        const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
-                        return (0.299*r + 0.587*g + 0.114*b) > 186;
-                    }
-                    if (isLightColor(app.color)) tile.classList.add('tile-light');
-                    let vscodeBtns = '';
-                    let githubBtns = '';
-                    // SVG logos
-                    const vscodeLogo = `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 32 32' style='vertical-align:middle'><path fill='#fff' d='M30.23 6.18L24.09 3.1a2.13 2.13 0 0 0-2.09 0L7.91 11.36l-3.2-2.5a1.07 1.07 0 0 0-1.36.06l-2.1 2a1.07 1.07 0 0 0 0 1.56l3.13 2.7l-3.13 2.7a1.07 1.07 0 0 0 0 1.56l2.1 2a1.07 1.07 0 0 0 1.36.06l3.2-2.5l14.09 8.26a2.13 2.13 0 0 0 2.09 0l6.14-3.08A2.13 2.13 0 0 0 32 22.08V8.92a2.13 2.13 0 0 0-1.77-2.74zM24 25.13L8.36 16L24 6.87z'/></svg>`;
-                    const githubLogo = `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' style='vertical-align:middle'><path fill='#fff' d='M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504c.5.092.682-.217.682-.482c0-.237-.009-.868-.014-1.703c-2.782.605-3.369-1.342-3.369-1.342c-.454-1.158-1.11-1.466-1.11-1.466c-.908-.62.069-.608.069-.608c1.004.07 1.532 1.032 1.532 1.032c.892 1.53 2.341 1.088 2.91.832c.092-.647.35-1.088.636-1.339c-2.221-.253-4.555-1.113-4.555-4.951c0-1.093.39-1.988 1.029-2.688c-.103-.253-.446-1.272.098-2.65c0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337c1.909-1.295 2.748-1.025 2.748-1.025c.546 1.378.202 2.397.1 2.65c.64.7 1.028 1.595 1.028 2.688c0 3.848-2.337 4.695-4.566 4.944c.359.309.678.919.678 1.852c0 1.336-.012 2.415-.012 2.744c0 .267.18.578.688.48A10.025 10.025 0 0 0 22 12.021C22 6.484 17.523 2 12 2'/></svg>`;
-                    const exists = await window.api.checkDirs(app.appId);
-                    if (exists.frontend && exists.backend) {
-                        vscodeBtns += `<button class='vsc-btn' onclick=\"window.api.openVSCode('${app.appId}-frontend')\">${vscodeLogo} Frontend</button>`;
-                        vscodeBtns += `<button class='vsc-btn' onclick=\"window.api.openVSCode('${app.appId}-backend')\">${vscodeLogo} Backend</button>`;
-                        githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${app.appId}-frontend')\">${githubLogo} GitHub Frontend</button>`;
-                        githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${app.appId}-backend')\">${githubLogo} GitHub Backend</button>`;
-                    } else if (exists.frontend) {
-                        vscodeBtns += `<button class='vsc-btn' onclick=\"window.api.openVSCode('${app.appId}-frontend')\">${vscodeLogo} Frontend</button>`;
-                        githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${app.appId}-frontend')\">${githubLogo} GitHub Frontend</button>`;
-                        githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${app.appId}')\">${githubLogo} GitHub</button>`;
-                    } else if (exists.backend) {
-                        vscodeBtns += `<button class='vsc-btn' onclick=\"window.api.openVSCode('${app.appId}-backend')\">${vscodeLogo} Backend</button>`;
-                        githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${app.appId}-backend')\">${githubLogo} GitHub Backend</button>`;
-                        githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${app.appId}')\">${githubLogo} GitHub</button>`;
-                    } else if (exists.root) {
-                        vscodeBtns += `<button class='vsc-btn' onclick=\"window.api.openVSCode('${app.appId}')\">${vscodeLogo} Ouvrir VSCode</button>`;
-                        githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${app.appId}')\">${githubLogo} GitHub</button>`;
-                    } else {
-                        githubBtns += `<button class='gh-btn' onclick=\"window.api.openGitHubRepo('${app.appId}')\">${githubLogo} GitHub</button>`;
-                    }
-                    // Badge framework Shields.io en bas du tile
-                    let frameworkBadge = '';
-                    if (app.framework) {
-                        const fwMap = {
-                            'angular': { color: 'dd0031', logo: 'angular' },
-                            'react': { color: '20232a', logo: 'react', logoColor: '61dafb' },
-                            'vue': { color: '42b883', logo: 'vuedotjs' },
-                            'electron': { color: '47848F', logo: 'electron', logoColor: 'white' },
-                            'svelte': { color: 'ff3e00', logo: 'svelte' },
-                            'node': { color: '339933', logo: 'nodedotjs' },
-                            'express': { color: '000000', logo: 'express' },
-                            'nestjs': { color: 'e0234e', logo: 'nestjs' },
-                            'nextjs': { color: '000000', logo: 'nextdotjs' },
-                            'nuxt': { color: '00c58e', logo: 'nuxtdotjs' },
-                            'python': { color: '3776AB', logo: 'python' },
-                            'django': { color: '092e20', logo: 'django' },
-                            'flask': { color: '000000', logo: 'flask' },
-                            'symfony': { color: '000000', logo: 'symfony' },
-                            'laravel': { color: 'ff2d20', logo: 'laravel' },
-                            'php': { color: '777bb4', logo: 'php' },
-                            'spring': { color: '6db33f', logo: 'spring' },
-                            'java': { color: '007396', logo: 'java' },
-                            'dotnet': { color: '512bd4', logo: 'dotnet' },
-                        };
-                        const fw = fwMap[app.framework.toLowerCase()];
-                        if (fw) {
-                            let badgeUrl = `https://img.shields.io/badge/${encodeURIComponent(app.framework)}-${fw.color}?logo=${fw.logo}&style=for-the-badge`;
-                            if (fw.logoColor) badgeUrl += `&logoColor=${fw.logoColor}`;
-                            frameworkBadge = `<img src='${badgeUrl}' alt='${app.framework} badge' style='max-width:80px;display:block;' class='framework-badge'>`;
-                        } else {
-                            frameworkBadge = `<span class='badge' style='background:#888;font-size:0.8em;'>${app.framework}</span>`;
-                        }
-                    }
-                    tile.innerHTML = `
-                        <div class='tile-header'><a href='#' class='build-btn' title='Build' onclick="event.stopPropagation();event.preventDefault();alert('Build ${app.application}')">📦</a></div>
-                        <div class='tile-main'>
-                            <h3>${app.application}</h3>
-                            <span class='badge'>${app.clientId}</span>
-                            <div class='btn-group'>${vscodeBtns}</div>
-                            <div class='btn-group'>${githubBtns}</div>
-                        </div>
-                        <div class='tile-footer'>${frameworkBadge}</div>
-                    `;
-                    container.appendChild(tile);
-                }
-            }
+<div id="loading-overlay"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;
+            align-items:center;justify-content:center;font-size:2em;color:#fff;font-weight:bold;
+            backdrop-filter:blur(2px);">
+    <div style="background:#222;padding:32px 48px;border-radius:12px;display:flex;flex-direction:column;align-items:center;">
+        ⏳ Build en cours...
+    </div>
+</div>
 
-            if (!localStorage.getItem('jsonPath')) {
-                showPathConfig();
+<footer style="text-align:center;margin-top:40px;color:#aaa;font-size:0.95em;">
+    <span>VER <span id="ver"></span></span>
+    <br>
+    <button id="set-root-btn"
+            style="margin-top:12px;padding:6px 18px;border-radius:5px;background:#1976d2;color:#fff;border:none;font-size:1rem;cursor:pointer;">
+        Configurer le dossier des apps
+    </button>
+    <span id="root-path-label" style="display:block;margin-top:8px;font-size:0.95em;color:#ccc;"></span>
+</footer>
+
+<script>
+/* ================= CONFIG APPS ROOT ================= */
+const rootLabel = document.getElementById('root-path-label');
+const setRootBtn = document.getElementById('set-root-btn');
+
+function getAppsRoot() {
+    return localStorage.getItem('appsRoot') || '';
+}
+
+async function setAppsRoot(path) {
+    localStorage.setItem('appsRoot', path || '');
+    rootLabel.textContent = path ? `Dossier apps : ${path}` : '';
+    if (window.api?.saveAppsRoot) await window.api.saveAppsRoot(path);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.api?.openFolderDialog) {
+        setRootBtn.disabled = true;
+        setRootBtn.style.opacity = 0.5;
+        rootLabel.innerHTML = "<span style='color:red'>Electron non disponible.</span>";
+        return;
+    }
+    setRootBtn.onclick = async () => {
+        const folder = await window.api.openFolderDialog();
+        if (folder) await setAppsRoot(folder);
+    };
+    setAppsRoot(getAppsRoot());
+});
+</script>
+
+<script>
+/* ================= APPS / UI ================= */
+const container = document.getElementById('tiles');
+const searchBarContainer = document.getElementById('search-bar-container');
+const searchBar = document.getElementById('search-bar');
+
+let allApps = [];
+let searchVisible = false;
+
+function getJsonPath() {
+    return localStorage.getItem('jsonPath') || './list-apps.json';
+}
+
+function showPathConfig() {
+    const configDiv = document.createElement('div');
+    configDiv.style = 'text-align:center;margin:40px auto;max-width:400px;padding:24px;background:#222;border-radius:10px;box-shadow:0 2px 12px #0003;';
+    configDiv.innerHTML = `
+        <h3>Configurer le chemin du fichier JSON</h3>
+        <input id='jsonPathInput' type='text' value="${getJsonPath()}" style='width:70%;padding:8px;border-radius:5px;border:1px solid #888;font-size:1rem;'>
+        <button id='browseBtn' style='padding:7px 12px;margin-left:8px;border-radius:5px;background:#1976d2;color:#fff;border:none;font-size:1rem;cursor:pointer;'>Parcourir</button>
+        <br><br>
+        <button id='validateBtn' style='padding:7px 18px;border-radius:5px;background:#1976d2;color:#fff;border:none;font-size:1rem;cursor:pointer;'>Valider</button>
+    `;
+    document.body.innerHTML = '';
+    document.body.appendChild(configDiv);
+
+    document.getElementById('browseBtn').onclick = async () => {
+        const file = await window.api.openFileDialog();
+        if (file) document.getElementById('jsonPathInput').value = file;
+    };
+    document.getElementById('validateBtn').onclick = () => {
+        localStorage.setItem('jsonPath', document.getElementById('jsonPathInput').value);
+        location.reload();
+    };
+}
+
+/* ---------- IPC LISTENERS ---------- */
+if (window.api?.onImportJson) window.api.onImportJson(showPathConfig);
+if (window.api?.onToggleSearch) window.api.onToggleSearch(() => {
+    searchVisible = !searchVisible;
+    searchBarContainer.style.display = searchVisible ? '' : 'none';
+    if (!searchVisible) {
+        searchBar.value = '';
+        renderTiles(allApps);
+    } else searchBar.focus();
+});
+if (window.api?.onBuildFinished) window.api.onBuildFinished(() => {
+    document.getElementById('loading-overlay').style.display = 'none';
+});
+
+/* ---------- HELPERS ---------- */
+function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
+
+function filterApps(apps, query) {
+    if (!query) return apps;
+    const q = query.trim().toLowerCase();
+    return apps.filter(app =>
+        (app.application?.toLowerCase().includes(q)) ||
+        (app.appId?.toLowerCase().includes(q)) ||
+        (app.clientId?.toLowerCase().includes(q))
+    );
+}
+
+function isLightColor(hex) {
+    if (!hex) return false;
+    let c = hex.replace('#','');
+    if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+    const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+    return (0.299*r + 0.587*g + 0.114*b) > 186;
+}
+
+/* ---------- RENDER TILES (avec frontend/backend/root) ---------- */
+async function renderTiles(apps) {
+    container.innerHTML = '';
+    for (const app of apps) {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+        tile.style.backgroundColor = app.color || '#444';
+
+        function isLightColor(hex) {
+            if (!hex) return false;
+            let c = hex.replace('#','');
+            if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+            const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+            return (0.299*r + 0.587*g + 0.114*b) > 186;
+        }
+        if (isLightColor(app.color)) tile.classList.add('tile-light');
+
+        const vscodeLogo = `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 32 32' style='vertical-align:middle'><path fill='#fff' d='M30.23 6.18L24.09 3.1a2.13 2.13 0 0 0-2.09 0L7.91 11.36l-3.2-2.5a1.07 1.07 0 0 0-1.36.06l-2.1 2a1.07 1.07 0 0 0 0 1.56l3.13 2.7l-3.13 2.7a1.07 1.07 0 0 0 0 1.56l2.1 2a1.07 1.07 0 0 0 1.36.06l3.2-2.5l14.09 8.26a2.13 2.13 0 0 0 2.09 0l6.14-3.08A2.13 2.13 0 0 0 32 22.08V8.92a2.13 2.13 0 0 0-1.77-2.74zM24 25.13L8.36 16L24 6.87z'/></svg>`;
+        const githubLogo = `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' style='vertical-align:middle'><path fill='#fff' d='M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504c.5.092.682-.217.682-.482c0-.237-.009-.868-.014-1.703c-2.782.605-3.369-1.342-3.369-1.342c-.454-1.158-1.11-1.466-1.11-1.466c-.908-.62.069-.608.069-.608c1.004.07 1.532 1.032 1.532 1.032c.892 1.53 2.341 1.088 2.91.832c.092-.647.35-1.088.636-1.339c-2.221-.253-4.555-1.113-4.555-4.951c0-1.093.39-1.988 1.029-2.688c-.103-.253-.446-1.272.098-2.65c0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337c1.909-1.295 2.748-1.025 2.748-1.025c.546 1.378.202 2.397.1 2.65c.64.7 1.028 1.595 1.028 2.688c0 3.848-2.337 4.695-4.566 4.944c.359.309.678.919.678 1.852c0 1.336-.012 2.415-.012 2.744c0 .267.18.578.688.48A10.025 10.025 0 0 0 22 12.021C22 6.484 17.523 2 12 2'/></svg>`;
+
+        const exists = await window.api.checkDirs(app.appId);
+        let vscodeBtns = '', githubBtns = '';
+
+        if (exists.frontend) {
+            vscodeBtns += `<button class='vsc-btn' onclick="window.api.openVSCode('${app.appId}-frontend')">${vscodeLogo} VS Frontend</button>`;
+            githubBtns += `<button class='gh-btn' onclick="window.api.openGitHubRepo('${app.appId}-frontend')">${githubLogo} Git Frontend</button>`;
+        }
+        if (exists.backend) {
+            vscodeBtns += `<button class='vsc-btn' onclick="window.api.openVSCode('${app.appId}-backend')">${vscodeLogo} VS Backend</button>`;
+            githubBtns += `<button class='gh-btn' onclick="window.api.openGitHubRepo('${app.appId}-backend')">${githubLogo} Git Backend</button>`;
+        }
+        if (exists.root) {
+            vscodeBtns += `<button class='vsc-btn' onclick="window.api.openVSCode('${app.appId}')">${vscodeLogo} VSCode</button>`;
+            githubBtns += `<button class='gh-btn' onclick="window.api.openGitHubRepo('${app.appId}')">${githubLogo} GitHub</button>`;
+        }
+
+        // Framework badges
+        let frameworkBadge = '';
+        if (app.framework) {
+            const fwMap = {
+                'angular': {color:'dd0031',logo:'angular'},
+                'react': {color:'20232a',logo:'react',logoColor:'61dafb'},
+                'vue': {color:'42b883',logo:'vuedotjs'},
+                'electron': {color:'47848F',logo:'electron',logoColor:'white'},
+                'svelte': {color:'ff3e00',logo:'svelte'},
+                'node': {color:'339933',logo:'nodedotjs'},
+                'express': {color:'000000',logo:'express'},
+                'nestjs': {color:'e0234e',logo:'nestjs'},
+                'nextjs': {color:'000000',logo:'nextdotjs'},
+                'nuxt': {color:'00c58e',logo:'nuxtdotjs'},
+                'python': {color:'3776AB',logo:'python'},
+                'django': {color:'092e20',logo:'django'},
+                'flask': {color:'000000',logo:'flask'},
+                'symfony': {color:'000000',logo:'symfony'},
+                'laravel': {color:'ff2d20',logo:'laravel'},
+                'php': {color:'777bb4',logo:'php'},
+                'spring': {color:'6db33f',logo:'spring'},
+                'java': {color:'007396',logo:'java'},
+                'dotnet': {color:'512bd4',logo:'dotnet'}
+            };
+            const fw = fwMap[app.framework.toLowerCase()];
+            if (fw) {
+                let badgeUrl = `https://img.shields.io/badge/${encodeURIComponent(app.framework)}-${fw.color}?logo=${fw.logo}&style=for-the-badge`;
+                if(fw.logoColor) badgeUrl += `&logoColor=${fw.logoColor}`;
+                frameworkBadge = `<img src='${badgeUrl}' alt='${app.framework}' style='max-width:80px;display:block;'/>`;
             } else {
-                fetch(getJsonPath())
-                    .then(response => response.json())
-                    .then(async data => {
-                        allApps = Object.values(data);
-                        await renderTiles(allApps);
-                    });
+                frameworkBadge = `<span class='badge' style='background:#888;font-size:0.8em;'>${app.framework}</span>`;
             }
+        }
 
-            if (searchBar) {
-                searchBar.addEventListener('input', async (e) => {
-                    const filtered = filterApps(allApps, searchBar.value);
-                    await renderTiles(filtered);
-                });
-            }
-        </script>
-        <script>
-        (async () => {
-            if (window.api && window.api.getVersion) {
-                document.getElementById('ver').textContent = await window.api.getVersion();
-            }
-        })();
-        </script>
-    </body>
+        tile.innerHTML = `
+            <div class='tile-header'>
+                <a href='#' class='build-btn' title='Build' onclick="event.preventDefault();showLoading();window.api.buildApp('${app.appId}', '${app.framework}')">📦</a>
+            </div>
+            <div class='tile-main'>
+                <h3>${app.application}</h3>
+                <span class='badge'>${app.clientId}</span>
+                <div class='btn-group'>${vscodeBtns}</div>
+                <div class='btn-group'>${githubBtns}</div>
+            </div>
+            <div class='tile-footer'>${frameworkBadge}</div>
+        `;
+        container.appendChild(tile);
+    }
+}
+
+/* ---------- INIT ---------- */
+if (!localStorage.getItem('jsonPath')) showPathConfig();
+else {
+    fetch(getJsonPath())
+        .then(r => r.json())
+        .then(data => {
+            allApps = Object.values(data);
+            renderTiles(allApps);
+        })
+        .catch(err => {
+            container.innerHTML = `<div style='color:red;text-align:center;margin:40px;'>Erreur : ${err.message}</div>`;
+        });
+}
+
+searchBar?.addEventListener('input', () => renderTiles(filterApps(allApps, searchBar.value)));
+</script>
+
+<script>
+(async () => {
+    if (window.api?.getVersion) document.getElementById('ver').textContent = await window.api.getVersion();
+})();
+</script>
+
+</body>
 </html>

@@ -30,5 +30,10 @@
       "target": "nsis",
       "icon": "icon.png"
     }
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "inquirer": "^13.1.0",
+    "open": "^11.0.0"
   }
 }
