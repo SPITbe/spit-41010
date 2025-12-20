@@ -120,6 +120,12 @@ ipcMain.handle('open-folder-dialog', async () => {
     return result.canceled ? null : result.filePaths[0];
 });
 
+ipcMain.on('open-external', (_, url) => {
+    if (typeof url === 'string') {
+        shell.openExternal(url);
+    }
+});
+
 ipcMain.handle('save-apps-root', async (_, appsRoot) => {
     try {
         const configPath = path.join(app.getPath('userData'), 'spitconfig.json');

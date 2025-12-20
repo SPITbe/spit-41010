@@ -25,6 +25,10 @@ contextBridge.exposeInMainWorld('api', {
         ipcRenderer.send('open-app-folder', folder);
     },
 
+    openExternal: (url) => {
+        if (typeof url !== 'string') return;
+        ipcRenderer.send('open-external', url);
+},
     /* ========= ASYNC ========= */
 
     checkDirs(appId) {
