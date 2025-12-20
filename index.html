@@ -7,9 +7,16 @@
 </head>
 <body>
 
+
 <h2 style="display:flex;align-items:center;justify-content:center;gap:16px;">
     <img src="icon.png" alt="Logo SPIT" style="height:44px;width:44px;">
     SPIT Launcher
+    <button id="refresh-btn" title="Rafraîchir" style="background:none;border:none;cursor:pointer;padding:0 0 0 8px;display:flex;align-items:center;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+            <path d="M4.93 19.07A10 10 0 1 1 12 22v-4"/>
+            <polyline points="23 4 23 10 17 10"/>
+        </svg>
+    </button>
 </h2>
 
 <div id="search-bar-container" style="display:none;text-align:center;margin-top:24px;">
@@ -69,10 +76,12 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script>
+
 /* ================= APPS / UI ================= */
 const container = document.getElementById('tiles');
 const searchBarContainer = document.getElementById('search-bar-container');
 const searchBar = document.getElementById('search-bar');
+const refreshBtn = document.getElementById('refresh-btn');
 
 let allApps = [];
 let searchVisible = false;
@@ -101,6 +110,28 @@ function showPathConfig() {
     document.getElementById('validateBtn').onclick = () => {
         localStorage.setItem('jsonPath', document.getElementById('jsonPathInput').value);
         location.reload();
+    };
+}
+
+async function refreshTiles() {
+    try {
+        const response = await fetch(getJsonPath());
+        const data = await response.json();
+        allApps = Object.values(data);
+        renderTiles(allApps);
+    } catch (err) {
+        container.innerHTML = `<div style='color:red;text-align:center;margin:40px;'>Erreur : ${err.message}</div>`;
+    }
+}
+
+if (refreshBtn) {
+    refreshBtn.onclick = () => {
+        refreshBtn.disabled = true;
+        refreshBtn.style.opacity = 0.5;
+        refreshTiles().finally(() => {
+            refreshBtn.disabled = false;
+            refreshBtn.style.opacity = 1;
+        });
     };
 }
 
@@ -348,18 +379,9 @@ async function renderTiles(apps) {
 }
 
 /* ---------- INIT ---------- */
+
 if (!localStorage.getItem('jsonPath')) showPathConfig();
-else {
-    fetch(getJsonPath())
-        .then(r => r.json())
-        .then(data => {
-            allApps = Object.values(data);
-            renderTiles(allApps);
-        })
-        .catch(err => {
-            container.innerHTML = `<div style='color:red;text-align:center;margin:40px;'>Erreur : ${err.message}</div>`;
-        });
-}
+else refreshTiles();
 
 searchBar?.addEventListener('input', () => renderTiles(filterApps(allApps, searchBar.value)));
 </script>
