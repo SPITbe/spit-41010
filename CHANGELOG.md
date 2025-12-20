@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.10.0...spit-41010-v1.11.0) (2025-12-19)
+
+
+### Features
+
+* implement toggle for frontend/backend app navigation and enhance button functionality ([c1877bd](https://github.com/SPITbe/spit-41010/commit/c1877bdb5bcd9d24676f20f7025398934c8b9aa4))
+
 ## [1.10.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.9.0...spit-41010-v1.10.0) (2025-12-19)
 
 
