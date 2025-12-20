@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.11.0...spit-41010-v1.12.0) (2025-12-20)
+
+
+### Features
+
+* add external link opening functionality and enhance tile title interaction ([cfc0dda](https://github.com/SPITbe/spit-41010/commit/cfc0dda700389e7c61194ca328118c606963badf))
+
 ## [1.11.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.10.0...spit-41010-v1.11.0) (2025-12-19)
 
 
