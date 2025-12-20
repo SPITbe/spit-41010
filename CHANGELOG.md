@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.12.0...spit-41010-v1.13.0) (2025-12-20)
+
+
+### Features
+
+* add functionality to open GitHub links externally ([1b47bcc](https://github.com/SPITbe/spit-41010/commit/1b47bcc7bab65243fa616c71008838f0efdffcdb))
+* add refresh button functionality to reload app tiles ([1d3c9d7](https://github.com/SPITbe/spit-41010/commit/1d3c9d79b39f11d87cfdee0072bcfe4fdf8906c4))
+
 ## [1.12.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.11.0...spit-41010-v1.12.0) (2025-12-20)
 
 
