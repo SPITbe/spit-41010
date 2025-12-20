@@ -136,6 +136,12 @@ ipcMain.handle('save-apps-root', async (_, appsRoot) => {
     }
 });
 
+ipcMain.on('open-github', (_, url) => {
+    if (typeof url === 'string') {
+        shell.openExternal(url);
+    }
+});
+
 ipcMain.on('open-app-folder', (_, folder) => {
     const absolutePath = path.join(BASE_DIR, `${PROJECT_PREFIX}${folder}`);
     shell.openPath(absolutePath);
