@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.13.0...spit-41010-v1.14.0) (2025-12-22)
+
+
+### Features
+
+* implement Vue build functionality and improve error handling ([8c85fe9](https://github.com/SPITbe/spit-41010/commit/8c85fe995c9d0e98667904b6dc989a6ad0be5a9b))
+
 ## [1.13.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.12.0...spit-41010-v1.13.0) (2025-12-20)
 
 
