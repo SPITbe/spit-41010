@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.15.0...spit-41010-v1.15.1) (2025-12-22)
+
+
+### Bug Fixes
+
+* correct distribution path by cleaning appId for build output ([e13559e](https://github.com/SPITbe/spit-41010/commit/e13559e4747c2a97800810cfc99fe59b7cb0deb1))
+
 ## [1.15.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.14.0...spit-41010-v1.15.0) (2025-12-22)
 
 
