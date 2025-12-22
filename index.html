@@ -273,7 +273,7 @@ async function renderTiles(apps) {
 
         tile.innerHTML = `
             <div class='tile-header' style='display:flex;align-items:center;justify-content:space-between;'>
-                <a href='#' class='build-btn' title='Build' onclick="event.preventDefault();showLoading();window.api.buildApp('${app.appId}', '${app.framework || (app.frameworks ? app.frameworks[0] : '')}')">📦</a>
+                <a href='#' class='build-btn' title='Build'>📦</a>
                 ${toggleHtml}
             </div>
             <div class='tile-main'>
@@ -286,6 +286,23 @@ async function renderTiles(apps) {
             <div class='tile-footer'>${frameworkBadges.join('')}</div>
         `;
         container.appendChild(tile);
+
+            setTimeout(() => {
+                const buildBtn = tile.querySelector('.build-btn');
+                if (buildBtn) {
+                    buildBtn.onclick = (event) => {
+                        event.preventDefault();
+                        showLoading();
+                        let currentMode = 'frontend';
+                        const toggle = tile.querySelector('.toggle-input');
+                        if (toggle && toggle.checked) currentMode = 'backend';
+                        const appId = app.frameworks ? app.appId + '-' + currentMode : app.appId;
+                        const framework = app.framework || (app.frameworks ? app.frameworks[0] : '');
+                        window.api.buildApp(appId, framework);
+                    };
+                }
+            }, 0);
+
             if (app.siteUrl) {
                 setTimeout(() => {
                     const title = tile.querySelector('.tile-title');
