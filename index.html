@@ -31,7 +31,17 @@
             align-items:center;justify-content:center;font-size:2em;color:#fff;font-weight:bold;
             backdrop-filter:blur(2px);">
     <div style="background:#222;padding:32px 48px;border-radius:12px;display:flex;flex-direction:column;align-items:center;">
-        ⏳ Build en cours...
+        <span id="loading-text">⏳ Initialisation...</span>
+
+        <div style="width:280px;height:10px;background:#444;border-radius:6px;margin-top:18px;overflow:hidden;">
+            <div id="loading-bar"
+                style="height:100%;width:0%;background:#4caf50;transition:width .4s ease;">
+            </div>
+        </div>
+
+        <span id="loading-step"
+            style="margin-top:10px;font-size:0.85em;opacity:.8;">
+        </span>
     </div>
 </div>
 
@@ -147,11 +157,70 @@ if (window.api?.onToggleSearch) window.api.onToggleSearch(() => {
     } else searchBar.focus();
 });
 if (window.api?.onBuildFinished) window.api.onBuildFinished(() => {
-    document.getElementById('loading-overlay').style.display = 'none';
+    hideLoading();
 });
 
 /* ---------- HELPERS ---------- */
-function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
+let loadingTimer = null;
+
+function showLoading(type = 'build') {
+    const overlay = document.getElementById('loading-overlay');
+    const text = document.getElementById('loading-text');
+    const bar = document.getElementById('loading-bar');
+    const step = document.getElementById('loading-step');
+
+    if (!overlay || !text || !bar) return;
+
+    overlay.style.display = 'flex';
+    bar.style.width = '0%';
+
+    const steps =
+        type === 'package'
+            ? [
+                { p: 10, t: 'Préparation du package...' },
+                { p: 35, t: 'Analyse des fichiers...' },
+                { p: 65, t: 'Création de l’archive...' },
+                { p: 90, t: 'Finalisation...' }
+            ]
+            : [
+                { p: 10, t: 'Initialisation du build...' },
+                { p: 30, t: 'Installation des dépendances...' },
+                { p: 60, t: 'Compilation du projet...' },
+                { p: 90, t: 'Optimisation...' }
+            ];
+
+    let i = 0;
+    text.textContent = type === 'package'
+        ? '📦 Packaging en cours...'
+        : '⚙️ Build en cours...';
+
+    clearInterval(loadingTimer);
+
+    loadingTimer = setInterval(() => {
+        if (i >= steps.length) return;
+        bar.style.width = steps[i].p + '%';
+        if (step) step.textContent = steps[i].t;
+        i++;
+    }, 900);
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    const bar = document.getElementById('loading-bar');
+    const step = document.getElementById('loading-step');
+
+    clearInterval(loadingTimer);
+    loadingTimer = null;
+
+    if (bar) bar.style.width = '100%';
+    if (step) step.textContent = 'Terminé ✔';
+
+    setTimeout(() => {
+        if (overlay) overlay.style.display = 'none';
+        if (bar) bar.style.width = '0%';
+        if (step) step.textContent = '';
+    }, 500);
+}
 
 function filterApps(apps, query) {
     if (!query) return apps;
@@ -169,6 +238,22 @@ function isLightColor(hex) {
     if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
     const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
     return (0.299*r + 0.587*g + 0.114*b) > 186;
+}
+
+function getFrameworkForMode(app, mode) {
+    if (!Array.isArray(app.frameworks)) {
+        return app.framework;
+    }
+
+    if (mode === 'backend') {
+        return app.frameworks.find(f =>
+            ['express', 'nestjs', 'fastify'].includes(f)
+        );
+    }
+
+    return app.frameworks.find(f =>
+        ['vue', 'angular', 'react', 'electron'].includes(f)
+    );
 }
 
 /* ---------- RENDER TILES (avec frontend/backend/root) ---------- */
@@ -197,7 +282,6 @@ async function renderTiles(apps) {
         let mode = 'frontend';
         let toggleHtml = '';
         if (exists.frontend && exists.backend) {
-            // Switch moderne dans le header
             mode = 'frontend';
             toggleHtml = `
                 <div class='toggle-choice' style='margin-left:8px;'>
@@ -226,7 +310,6 @@ async function renderTiles(apps) {
             folderBtns = `<button class='folder-btn' onclick="window.api.openAppFolder('${app.appId}')">${folderLogo} Dossier</button>`;
         }
 
-        // Framework badges (supporte frameworks[] ou framework)
         let frameworkBadges = [];
         const fwMap = {
             'angular': {color:'dd0031',logo:'angular'},
@@ -290,16 +373,41 @@ async function renderTiles(apps) {
             setTimeout(() => {
                 const buildBtn = tile.querySelector('.build-btn');
                 if (buildBtn) {
-                    buildBtn.onclick = (event) => {
+                    buildBtn.onclick = async (event) => {
                         event.preventDefault();
-                        showLoading();
-                        let currentMode = 'frontend';
+
+                        const exists = await window.api.checkDirs(app.appId);
                         const toggle = tile.querySelector('.toggle-input');
-                        if (toggle && toggle.checked) currentMode = 'backend';
-                        const appId = app.frameworks ? app.appId + '-' + currentMode : app.appId;
-                        const framework = app.framework || (app.frameworks ? app.frameworks[0] : '');
-                        window.api.buildApp(appId, framework);
+
+                        const mode =
+                            exists.frontend && exists.backend
+                                ? (toggle && toggle.checked ? 'backend' : 'frontend')
+                                : exists.frontend
+                                    ? 'frontend'
+                                    : exists.backend
+                                        ? 'backend'
+                                        : 'root';
+
+                        const targetId =
+                            mode === 'root'
+                                ? app.appId
+                                : `${app.appId}-${mode}`;
+
+                        const framework = getFrameworkForMode(app, mode);
+
+                        showLoading(
+                            ['express', 'nestjs', 'fastify'].includes(framework)
+                                ? 'package'
+                                : 'build'
+                        );
+
+                        window.api.buildApp({
+                            appId: targetId,
+                            framework,
+                            mode
+                        });
                     };
+
                 }
             }, 0);
 

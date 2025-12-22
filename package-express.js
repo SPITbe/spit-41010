@@ -30,13 +30,16 @@ module.exports = async function packageExpress(appId, win) {
     const archive = archiver('zip', { zlib: { level: 9 } })
 
     output.on('close', async () => {
-      dialog.showMessageBox(win, {
+      win.webContents.send('build-finished')
+      
+      await dialog.showMessageBox(win, {
         type: 'info',
         title: 'Serveur prêt',
         message: `Archive Express créée : ${zipName}`
       })
 
       await shell.openPath(appDir)
+      
     })
 
     archive.on('error', err => {
@@ -61,5 +64,7 @@ module.exports = async function packageExpress(appId, win) {
       title: 'Erreur',
       message: `Erreur lors de l’archivage : ${err.message}`
     })
+
+    win.webContents.send('build-finished')
   }
 }

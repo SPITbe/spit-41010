@@ -105,12 +105,12 @@ ipcMain.on('open-vscode', (_, folder) => {
 });
 
 ipcMain.handle('check-dirs', (_, appId) => {
-    const root = path.join(BASE_DIR, `${PROJECT_PREFIX}${appId}`);
-    return {
-        frontend: fs.existsSync(`${root}-frontend`),
-        backend: fs.existsSync(`${root}-backend`),
-        root: fs.existsSync(root)
-    };
+  const root = path.join(BASE_DIR, `${PROJECT_PREFIX}${appId}`);
+  return {
+    root: fs.existsSync(root),
+    frontend: fs.existsSync(`${root}-frontend`),
+    backend: fs.existsSync(`${root}-backend`)
+  };
 });
 
 ipcMain.handle('open-folder-dialog', async () => {
@@ -147,38 +147,37 @@ ipcMain.on('open-app-folder', (_, folder) => {
     shell.openPath(absolutePath);
 });
 
-ipcMain.on('build-app', async (event, appId, framework) => {
-    const win = BrowserWindow.getFocusedWindow();
-    if (!win) return;
+ipcMain.on('build-app', async (_, { appId, framework }) => {
+  const win = BrowserWindow.getFocusedWindow();
+  if (!win) return;
 
-    try {
-        switch (framework) {
-            case 'angular':
-                const buildAngular = require('./build-angular');
-                await buildAngular(appId, win)
-                break;
-            case 'electron':
-                const buildElectron = require('./build-electron');
-                await buildElectron(appId, win)
-                break;
-            case 'vue': 
-                const buildVue = require('./build-vue');
-                await buildVue(appId, win)
-                break;
-            case 'express':
-                const buildExpress = require('./package-express');
-                await buildExpress(appId, win)
-                break;
-            default:
-                throw new Error('Framework de build inconnu');
-        }
-        if (win && !win.isDestroyed()) win.webContents.send('build-finished');
+  try {
+    switch (framework) {
+      case 'angular':
+        await require('./build-angular')(appId, win);
+        break;
+
+      case 'vue':
+        await require('./build-vue')(appId, win);
+        break;
+
+      case 'electron':
+        await require('./build-electron')(appId, win);
+        break;
+
+      case 'express':
+        await require('./package-express')(appId, win);
+        break;
+
+      default:
+        throw new Error(`Framework non supporté : ${framework}`);
     }
-    catch (error) {
-        dialog.showErrorBox('Erreur', error?.message?.toString() || 'Erreur inconnue');
-        if (win && !win.isDestroyed()) win.webContents.send('build-finished');
-    }
+
+  } catch (e) {
+    dialog.showErrorBox('Erreur', e.message);
+  }
 });
+
 
 /* ================= ID GENERATOR ================= */
 
