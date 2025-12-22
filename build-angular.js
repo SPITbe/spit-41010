@@ -71,7 +71,8 @@ module.exports = async function buildAngular(appId, win) {
                 return;
             }
     
-            const distPath = path.join(appDir, 'dist', `spit-${appId}`, 'browser');
+            const cleanAppId = appId.replace(/-(frontend|backend)$/i, '');
+            const distPath = path.join(appDir, 'dist', `spit-${cleanAppId}`, 'browser');
             if (!fs.existsSync(distPath)) {
                 dialog.showMessageBox(win, {
                     type: 'warning',
