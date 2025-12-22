@@ -36,13 +36,14 @@ module.exports = async function buildAngular(appId, win) {
                 type: 'question',
                 buttons: buildScripts,
                 title: 'Choix du build',
-                message: `Plusieurs scripts de build disponibles pour ${appId}, lequel lancer ?`
+                message: `Plusieurs scripts de build disponibles pour ${appId}, lequel lancer ?`,
+                cancelId: buildScripts.length
             });
-                if (response === -1) {
-                    win.webContents.send('build-cancelled');
-                    return;
-                }
-                chosenScript = buildScripts[response];
+            if (response < 0 || response >= buildScripts.length) {
+                win.webContents.send('build-cancelled');
+                return;
+            }
+            chosenScript = buildScripts[response];
         }
     
         const child = spawn('npm', ['run', chosenScript], { cwd: appDir, shell: true });

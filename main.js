@@ -165,6 +165,10 @@ ipcMain.on('build-app', async (event, appId, framework) => {
                 const buildVue = require('./build-vue');
                 await buildVue(appId, win)
                 break;
+            case 'express':
+                const buildExpress = require('./package-express');
+                await buildExpress(appId, win)
+                break;
             default:
                 throw new Error('Framework de build inconnu');
         }

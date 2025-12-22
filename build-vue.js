@@ -39,10 +39,11 @@ module.exports = async function buildVue(appId, win) {
       type: 'question',
       buttons: buildScripts,
       title: 'Choix du build',
-      message: `Plusieurs scripts de build disponibles pour ${appId}, lequel lancer ?`
+      message: `Plusieurs scripts de build disponibles pour ${appId}, lequel lancer ?`,
+      cancelId: buildScripts.length 
     })
 
-    if (response === -1) {
+    if (response < 0 || response >= buildScripts.length) {
       win.webContents.send('build-cancelled')
       return
     }
