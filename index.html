@@ -121,6 +121,7 @@ async function refreshTiles() {
         renderTiles(allApps);
     } catch (err) {
         container.innerHTML = `<div style='color:red;text-align:center;margin:40px;'>Erreur : ${err.message}</div>`;
+        document.getElementById('loading-overlay').style.display = 'none';
     }
 }
 

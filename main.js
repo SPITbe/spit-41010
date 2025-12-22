@@ -161,12 +161,18 @@ ipcMain.on('build-app', async (event, appId, framework) => {
                 const buildElectron = require('./build-electron');
                 await buildElectron(appId, win)
                 break;
+            case 'vue': 
+                const buildVue = require('./build-vue');
+                await buildVue(appId, win)
+                break;
             default:
                 throw new Error('Framework de build inconnu');
         }
+        if (win && !win.isDestroyed()) win.webContents.send('build-finished');
     }
     catch (error) {
         dialog.showErrorBox('Erreur', error?.message?.toString() || 'Erreur inconnue');
+        if (win && !win.isDestroyed()) win.webContents.send('build-finished');
     }
 });
 
