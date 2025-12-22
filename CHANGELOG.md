@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.15.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.14.0...spit-41010-v1.15.0) (2025-12-22)
+
+
+### Features
+
+* add express packaging functionality and improve build script handling ([b95d0b1](https://github.com/SPITbe/spit-41010/commit/b95d0b199b268f67212281c885d5fcecc5747622))
+* enhance loading indicators and improve build process feedback ([bb43135](https://github.com/SPITbe/spit-41010/commit/bb431352bf89790e7fcc74555d44a4dfabde7090))
+
 ## [1.14.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.13.0...spit-41010-v1.14.0) (2025-12-22)
 
 
