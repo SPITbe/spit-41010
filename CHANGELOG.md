@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.2](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.15.1...spit-41010-v1.15.2) (2026-01-04)
+
+
+### Bug Fixes
+
+* include dot files in archive ignore list for build output ([85d1563](https://github.com/SPITbe/spit-41010/commit/85d1563f9528ddc7bba754483363eaa491d182f8))
+
 ## [1.15.1](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.15.0...spit-41010-v1.15.1) (2025-12-22)
 
 
