@@ -104,7 +104,8 @@ module.exports = async function buildAngular(appId, win) {
     
                 archive.glob('**/*', {
                     cwd: distPath,
-                    ignore: [zipName]
+                    ignore: [zipName],
+                    dot: true
                 });
     
                 archive.pipe(output);
