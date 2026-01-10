@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.3](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.15.2...spit-41010-v1.15.3) (2026-01-10)
+
+
+### Bug Fixes
+
+* update badge display to include appId prefix ([2e707d7](https://github.com/SPITbe/spit-41010/commit/2e707d729ef52d78416a8a42d2597b987785353a))
+
 ## [1.15.2](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.15.1...spit-41010-v1.15.2) (2026-01-04)
 
 
