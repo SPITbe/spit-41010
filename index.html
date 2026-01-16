@@ -318,6 +318,9 @@ async function renderTiles(apps) {
             'electron': {color:'47848F',logo:'electron',logoColor:'white'},
             'svelte': {color:'ff3e00',logo:'svelte'},
             'node': {color:'339933',logo:'nodedotjs'},
+            'discord.js': {color:'5865F2',logo:'discord',logoColor:'white'},
+            'discordjs': {color:'5865F2',logo:'discord',logoColor:'white'},
+            'discord': {color:'5865F2',logo:'discord',logoColor:'white'},
             'express': {color:'000000',logo:'express'},
             'nestjs': {color:'e0234e',logo:'nestjs'},
             'nextjs': {color:'000000',logo:'nextdotjs'},
@@ -338,7 +341,7 @@ async function renderTiles(apps) {
                 if (fw) {
                     let badgeUrl = `https://img.shields.io/badge/${encodeURIComponent(fwName)}-${fw.color}?logo=${fw.logo}&style=for-the-badge`;
                     if(fw.logoColor) badgeUrl += `&logoColor=${fw.logoColor}`;
-                    frameworkBadges.push(`<img src='${badgeUrl}' alt='${fwName}' style='max-width:80px;display:block;margin-bottom:2px;'/>`);
+                    frameworkBadges.push(`<img src='${badgeUrl}' alt='${fwName}' style='height:22px;display:block;margin-bottom:2px;'/>`);
                 } else {
                     frameworkBadges.push(`<span class='badge' style='background:#888;font-size:0.8em;'>${fwName}</span>`);
                 }
@@ -348,7 +351,7 @@ async function renderTiles(apps) {
             if (fw) {
                 let badgeUrl = `https://img.shields.io/badge/${encodeURIComponent(app.framework)}-${fw.color}?logo=${fw.logo}&style=for-the-badge`;
                 if(fw.logoColor) badgeUrl += `&logoColor=${fw.logoColor}`;
-                frameworkBadges.push(`<img src='${badgeUrl}' alt='${app.framework}' style='max-width:80px;display:block;'/>`);
+                frameworkBadges.push(`<img src='${badgeUrl}' alt='${app.framework}' style='height:22px;display:block;'/>`);
             } else {
                 frameworkBadges.push(`<span class='badge' style='background:#888;font-size:0.8em;'>${app.framework}</span>`);
             }
