@@ -95,6 +95,123 @@ const refreshBtn = document.getElementById('refresh-btn');
 
 let allApps = [];
 let searchVisible = false;
+let activeFrameworkFilter = '';
+let activeClientFilter = '';
+
+function getFrameworkNames(app) {
+    if (!app) return [];
+    if (Array.isArray(app.frameworks)) {
+        return app.frameworks
+            .map(f => (typeof f === 'string' ? f : (f?.name || f?.framework || '')))
+            .filter(Boolean);
+    }
+    if (typeof app.framework === 'string' && app.framework.trim()) return [app.framework.trim()];
+    return [];
+}
+
+function getFilteredApps() {
+    let apps = [...allApps];
+
+    if (activeFrameworkFilter) {
+        const target = activeFrameworkFilter.toLowerCase();
+        apps = apps.filter(app => getFrameworkNames(app).some(f => f.toLowerCase() === target));
+    }
+
+    if (activeClientFilter) {
+        const target = activeClientFilter.toLowerCase();
+        apps = apps.filter(app => (app.clientId || '').toLowerCase() === target);
+    }
+
+    return filterApps(apps, searchBar?.value || '');
+}
+
+function refreshRender() {
+    renderTiles(getFilteredApps());
+}
+
+function showSelectModal({ title, items, currentValue, onApply }) {
+    const existing = document.getElementById('filter-modal-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'filter-modal-overlay';
+    overlay.style.cssText = [
+        'position:fixed',
+        'inset:0',
+        'background:rgba(0,0,0,0.55)',
+        'z-index:10000',
+        'display:flex',
+        'align-items:center',
+        'justify-content:center'
+    ].join(';');
+
+    const card = document.createElement('div');
+    card.style.cssText = [
+        'width:min(520px, 92vw)',
+        'background:#1f1f1f',
+        'border:1px solid #333',
+        'border-radius:12px',
+        'padding:18px 18px 14px',
+        'box-shadow:0 10px 30px rgba(0,0,0,0.35)',
+        'color:#fff'
+    ].join(';');
+
+    const heading = document.createElement('div');
+    heading.textContent = title;
+    heading.style.cssText = 'font-size:1.1rem;font-weight:700;margin-bottom:12px;';
+
+    const select = document.createElement('select');
+    select.style.cssText = 'width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;font-size:1rem;';
+
+    const emptyOpt = document.createElement('option');
+    emptyOpt.value = '';
+    emptyOpt.textContent = '— Aucun (désactiver le filtre) —';
+    select.appendChild(emptyOpt);
+
+    for (const item of items) {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        select.appendChild(opt);
+    }
+
+    select.value = currentValue || '';
+
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;justify-content:flex-end;gap:10px;margin-top:14px;';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Annuler';
+    cancelBtn.style.cssText = 'padding:8px 12px;border-radius:8px;border:1px solid #555;background:#2a2a2a;color:#fff;cursor:pointer;';
+    cancelBtn.onclick = () => overlay.remove();
+
+    const okBtn = document.createElement('button');
+    okBtn.textContent = 'Appliquer';
+    okBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:none;background:#1976d2;color:#fff;cursor:pointer;font-weight:600;';
+    okBtn.onclick = () => {
+        onApply(select.value);
+        overlay.remove();
+    };
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(okBtn);
+    card.appendChild(heading);
+    card.appendChild(select);
+    card.appendChild(actions);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.remove();
+    });
+    window.addEventListener('keydown', function onKey(e) {
+        if (e.key === 'Escape') {
+            overlay.remove();
+            window.removeEventListener('keydown', onKey);
+        }
+    });
+    select.focus();
+}
 
 function getJsonPath() {
     return localStorage.getItem('jsonPath') || './list-apps.json';
@@ -128,7 +245,7 @@ async function refreshTiles() {
         const response = await fetch(getJsonPath());
         const data = await response.json();
         allApps = Object.values(data);
-        renderTiles(allApps);
+        refreshRender();
     } catch (err) {
         container.innerHTML = `<div style='color:red;text-align:center;margin:40px;'>Erreur : ${err.message}</div>`;
         document.getElementById('loading-overlay').style.display = 'none';
@@ -153,11 +270,51 @@ if (window.api?.onToggleSearch) window.api.onToggleSearch(() => {
     searchBarContainer.style.display = searchVisible ? '' : 'none';
     if (!searchVisible) {
         searchBar.value = '';
-        renderTiles(allApps);
+        refreshRender();
     } else searchBar.focus();
 });
 if (window.api?.onBuildFinished) window.api.onBuildFinished(() => {
     hideLoading();
+});
+
+if (window.api?.onFilterFramework) window.api.onFilterFramework(() => {
+    const frameworks = Array.from(
+        new Set(allApps.flatMap(app => getFrameworkNames(app)))
+    ).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+    showSelectModal({
+        title: 'Filtrer par framework',
+        items: frameworks,
+        currentValue: activeFrameworkFilter,
+        onApply: (value) => {
+            activeFrameworkFilter = value || '';
+            activeClientFilter = '';
+            refreshRender();
+        }
+    });
+});
+
+if (window.api?.onFilterClient) window.api.onFilterClient(() => {
+    const clients = Array.from(
+        new Set(allApps.map(a => a.clientId).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+    showSelectModal({
+        title: 'Filtrer par client',
+        items: clients,
+        currentValue: activeClientFilter,
+        onApply: (value) => {
+            activeClientFilter = value || '';
+            activeFrameworkFilter = '';
+            refreshRender();
+        }
+    });
+});
+
+if (window.api?.onFilterClear) window.api.onFilterClear(() => {
+    activeFrameworkFilter = '';
+    activeClientFilter = '';
+    refreshRender();
 });
 
 /* ---------- HELPERS ---------- */
@@ -512,7 +669,7 @@ async function renderTiles(apps) {
 if (!localStorage.getItem('jsonPath')) showPathConfig();
 else refreshTiles();
 
-searchBar?.addEventListener('input', () => renderTiles(filterApps(allApps, searchBar.value)));
+searchBar?.addEventListener('input', () => refreshRender());
 </script>
 
 <script>

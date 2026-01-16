@@ -44,7 +44,7 @@ function safeSend(channel, payload) {
 
 const toolMenu = Menu.buildFromTemplate([
     {
-        label: 'Fichiers',
+        label: 'Fichier',
         submenu: [
             {
                 label: 'Importer liste json',
@@ -63,6 +63,27 @@ const toolMenu = Menu.buildFromTemplate([
             },
             { type: 'separator' },
             { role: 'quit', label: 'Quitter' }
+        ]
+    },
+    {
+        label: 'Filtre',
+        submenu: [
+            {
+                label: 'Filtrer par framework…',
+                accelerator: 'CmdOrCtrl+Alt+F',
+                click: () => safeSend('filter-framework')
+            },
+            {
+                label: 'Filtrer par client…',
+                accelerator: 'CmdOrCtrl+Alt+C',
+                click: () => safeSend('filter-client')
+            },
+            { type: 'separator' },
+            {
+                label: 'Réinitialiser le filtre',
+                accelerator: 'CmdOrCtrl+Alt+X',
+                click: () => safeSend('filter-clear')
+            }
         ]
     },
     {

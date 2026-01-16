@@ -69,5 +69,23 @@ contextBridge.exposeInMainWorld('api', {
         const listener = () => callback();
         ipcRenderer.on('build-finished', listener);
         return () => ipcRenderer.removeListener('build-finished', listener);
+    },
+
+    onFilterFramework(callback) {
+        const listener = () => callback();
+        ipcRenderer.on('filter-framework', listener);
+        return () => ipcRenderer.removeListener('filter-framework', listener);
+    },
+
+    onFilterClient(callback) {
+        const listener = () => callback();
+        ipcRenderer.on('filter-client', listener);
+        return () => ipcRenderer.removeListener('filter-client', listener);
+    },
+
+    onFilterClear(callback) {
+        const listener = () => callback();
+        ipcRenderer.on('filter-clear', listener);
+        return () => ipcRenderer.removeListener('filter-clear', listener);
     }
 });
