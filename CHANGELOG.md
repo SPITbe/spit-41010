@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.15.2...spit-41010-v1.16.0) (2026-01-16)
+
+
+### Features
+
+* add framework and client filtering functionality ([5256baf](https://github.com/SPITbe/spit-41010/commit/5256baf135ca077bd0742cb880d92fbdf743903c))
+
+
+### Bug Fixes
+
+* add Discord framework support and adjust badge height ([a5e28e3](https://github.com/SPITbe/spit-41010/commit/a5e28e3757b1c3761dbf9f02febc2e86e0a6d970))
+* update badge display to include appId prefix ([2e707d7](https://github.com/SPITbe/spit-41010/commit/2e707d729ef52d78416a8a42d2597b987785353a))
+
 ## [1.15.2](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.15.1...spit-41010-v1.15.2) (2026-01-04)
 
 
