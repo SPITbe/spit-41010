@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.16.0...spit-41010-v1.17.0) (2026-03-24)
+
+
+### Features
+
+* enhance JSON configuration management and UI for app list editing ([c5fc2ac](https://github.com/SPITbe/spit-41010/commit/c5fc2ac0ea66bb791c59defef68dcf65755d398f))
+* implement project directory resolution and enhance version management ([946037f](https://github.com/SPITbe/spit-41010/commit/946037f2bbe9ac1755a1aedbdfae1e65bb821207))
+
 ## [1.16.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.15.2...spit-41010-v1.16.0) (2026-01-16)
 
 
