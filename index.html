@@ -60,32 +60,241 @@
 const rootLabel = document.getElementById('root-path-label');
 const setRootBtn = document.getElementById('set-root-btn');
 
-function getAppsRoot() {
-    return localStorage.getItem('appsRoot') || '';
+function normalizeAppsObject(obj) {
+    if (!obj || typeof obj !== 'object') return {};
+    return obj;
 }
 
-async function setAppsRoot(path) {
-    localStorage.setItem('appsRoot', path || '');
-    rootLabel.textContent = path ? `Dossier apps : ${path}` : '';
-    if (window.api?.saveAppsRoot) await window.api.saveAppsRoot(path);
-}
+function showAppsEditor() {
+    const root = document.createElement('div');
+    root.style.cssText = 'max-width:1100px;margin:28px auto 40px; padding:0 16px;';
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (!window.api?.openFolderDialog) {
-        setRootBtn.disabled = true;
-        setRootBtn.style.opacity = 0.5;
-        rootLabel.innerHTML = "<span style='color:red'>Electron non disponible.</span>";
-        return;
+    root.innerHTML = `
+        <h2 style="display:flex;align-items:center;justify-content:center;gap:16px;">
+            <img src="icon.png" alt="Logo SPIT" style="height:44px;width:44px;">
+            Éditeur de liste
+        </h2>
+
+        <div style="display:flex;justify-content:center;gap:10px;margin:18px 0 8px;flex-wrap:wrap;">
+            <button id="editor-back" style="padding:8px 14px;border-radius:8px;border:1px solid #555;background:#2a2a2a;color:#fff;cursor:pointer;">Retour</button>
+            <button id="editor-open-json" style="padding:8px 14px;border-radius:8px;border:none;background:#1976d2;color:#fff;cursor:pointer;font-weight:600;">Ouvrir le JSON</button>
+            <button id="editor-add" style="padding:8px 14px;border-radius:8px;border:none;background:#1976d2;color:#fff;cursor:pointer;font-weight:600;">Ajouter</button>
+            <button id="editor-save" style="padding:8px 14px;border-radius:8px;border:none;background:#4caf50;color:#fff;cursor:pointer;font-weight:700;">Sauver</button>
+        </div>
+
+        <div id="editor-status" style="text-align:center;color:#ccc;margin:8px 0 18px;"></div>
+
+        <div style="display:grid;grid-template-columns: 360px 1fr; gap:16px; align-items:start;">
+            <div style="background:#1f1f1f;border:1px solid #333;border-radius:12px;padding:12px;">
+                <div style="font-weight:700;margin-bottom:10px;">Applications</div>
+                <input id="editor-filter" placeholder="Filtrer (appId / nom / clientId)" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;font-size:0.95rem;box-sizing:border-box;margin-bottom:10px;" />
+                <div id="editor-list" style="max-height:56vh;overflow:auto;"></div>
+            </div>
+
+            <div style="background:#1f1f1f;border:1px solid #333;border-radius:12px;padding:14px;">
+                <div style="font-weight:700;margin-bottom:10px;">Détails</div>
+                <div style="display:grid;grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <div style="font-size:0.85rem;opacity:0.85;margin-bottom:4px;">appId</div>
+                        <input id="f-appId" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;box-sizing:border-box;" />
+                    </div>
+                    <div>
+                        <div style="font-size:0.85rem;opacity:0.85;margin-bottom:4px;">clientId</div>
+                        <input id="f-clientId" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;box-sizing:border-box;" />
+                    </div>
+                    <div style="grid-column:1 / -1;">
+                        <div style="font-size:0.85rem;opacity:0.85;margin-bottom:4px;">application</div>
+                        <input id="f-application" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;box-sizing:border-box;" />
+                    </div>
+                    <div>
+                        <div style="font-size:0.85rem;opacity:0.85;margin-bottom:4px;">color (hex)</div>
+                        <input id="f-color" placeholder="#32455B" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;box-sizing:border-box;" />
+                    </div>
+                    <div>
+                        <div style="font-size:0.85rem;opacity:0.85;margin-bottom:4px;">frameworks (séparés par virgule)</div>
+                        <input id="f-frameworks" placeholder="angular, express" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;box-sizing:border-box;" />
+                    </div>
+                    <div style="grid-column:1 / -1;">
+                        <div style="font-size:0.85rem;opacity:0.85;margin-bottom:4px;">siteUrl (optionnel)</div>
+                        <input id="f-siteUrl" placeholder="https://..." style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;box-sizing:border-box;" />
+                    </div>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px;">
+                    <button id="editor-delete" style="padding:8px 14px;border-radius:8px;border:1px solid #7a2b2b;background:#2a2a2a;color:#fff;cursor:pointer;">Supprimer</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.innerHTML = '';
+    document.body.appendChild(root);
+
+    const status = root.querySelector('#editor-status');
+    const list = root.querySelector('#editor-list');
+    const filter = root.querySelector('#editor-filter');
+
+    const fAppId = root.querySelector('#f-appId');
+    const fClientId = root.querySelector('#f-clientId');
+    const fApplication = root.querySelector('#f-application');
+    const fColor = root.querySelector('#f-color');
+    const fFrameworks = root.querySelector('#f-frameworks');
+    const fSiteUrl = root.querySelector('#f-siteUrl');
+
+    let appsObj = {};
+    let selectedKey = null;
+
+    function setStatus(text, isError = false) {
+        status.textContent = text || '';
+        status.style.color = isError ? '#ffb4b4' : '#ccc';
     }
-    setRootBtn.onclick = async () => {
-        const folder = await window.api.openFolderDialog();
-        if (folder) await setAppsRoot(folder);
-    };
-    setAppsRoot(getAppsRoot());
-});
-</script>
 
-<script>
+    function getFormValue() {
+        const appId = (fAppId.value || '').trim();
+        const application = (fApplication.value || '').trim();
+        const clientId = (fClientId.value || '').trim();
+        const color = (fColor.value || '').trim();
+        const siteUrl = (fSiteUrl.value || '').trim();
+        const fwRaw = (fFrameworks.value || '').trim();
+        const frameworks = fwRaw
+            ? fwRaw.split(',').map(s => s.trim()).filter(Boolean)
+            : [];
+
+        const record = {
+            application,
+            appId,
+            clientId,
+            color
+        };
+
+        if (siteUrl) record.siteUrl = siteUrl;
+        if (frameworks.length === 1) record.framework = frameworks[0];
+        if (frameworks.length > 1) record.frameworks = frameworks;
+
+        return record;
+    }
+
+    function setFormValue(app) {
+        fAppId.value = app?.appId || '';
+        fApplication.value = app?.application || '';
+        fClientId.value = app?.clientId || '';
+        fColor.value = app?.color || '';
+        fSiteUrl.value = app?.siteUrl || '';
+        const fw = Array.isArray(app?.frameworks)
+            ? app.frameworks
+            : (app?.framework ? [app.framework] : []);
+        fFrameworks.value = fw.join(', ');
+    }
+
+    function sortedKeys(obj) {
+        return Object.keys(obj || {}).sort((a, b) => String(a).localeCompare(String(b), 'fr', { sensitivity: 'base' }));
+    }
+
+    function renderList() {
+        const q = (filter.value || '').trim().toLowerCase();
+        const keys = sortedKeys(appsObj).filter((k) => {
+            if (!q) return true;
+            const a = appsObj[k] || {};
+            return (
+                String(k).toLowerCase().includes(q) ||
+                String(a.appId || '').toLowerCase().includes(q) ||
+                String(a.application || '').toLowerCase().includes(q) ||
+                String(a.clientId || '').toLowerCase().includes(q)
+            );
+        });
+
+        list.innerHTML = keys.map((k) => {
+            const a = appsObj[k] || {};
+            const active = selectedKey === k;
+            return `
+                <div data-key="${k}" style="padding:10px 10px;border-radius:10px;border:1px solid ${active ? '#1976d2' : '#333'};background:${active ? 'rgba(25,118,210,0.18)' : '#121212'};cursor:pointer;margin-bottom:8px;">
+                    <div style="font-weight:800;">${(a.application || '(sans nom)').replace(/</g,'&lt;')}</div>
+                    <div style="font-size:0.86rem;opacity:0.85;">spit-${(a.appId || k).replace(/</g,'&lt;')}</div>
+                    <div style="font-size:0.82rem;opacity:0.7;">${(a.clientId || '').replace(/</g,'&lt;')}</div>
+                </div>
+            `;
+        }).join('');
+
+        list.querySelectorAll('[data-key]').forEach((el) => {
+            el.onclick = () => {
+                selectedKey = el.getAttribute('data-key');
+                setFormValue(appsObj[selectedKey]);
+                renderList();
+            };
+        });
+    }
+
+    async function load() {
+        if (!window.api?.getAppsJson) {
+            setStatus('Electron API indisponible.', true);
+            return;
+        }
+        setStatus('Chargement...');
+        appsObj = normalizeAppsObject(await window.api.getAppsJson());
+        const first = sortedKeys(appsObj)[0] || null;
+        selectedKey = first;
+        setFormValue(first ? appsObj[first] : null);
+        renderList();
+        setStatus('');
+    }
+
+    root.querySelector('#editor-back').onclick = () => location.reload();
+    root.querySelector('#editor-open-json').onclick = async () => {
+        const p = window.api?.getAppsJsonPath ? await window.api.getAppsJsonPath() : null;
+        if (!p) return setStatus('Chemin JSON introuvable.', true);
+        const ok = await window.api.openJsonFile(p);
+        if (!ok) setStatus('Impossible d’ouvrir le JSON.', true);
+        else setStatus('');
+    };
+
+    root.querySelector('#editor-add').onclick = () => {
+        selectedKey = null;
+        setFormValue({});
+        renderList();
+        setStatus('Nouvelle entrée. Remplis puis Sauver.');
+        fAppId.focus();
+    };
+
+    root.querySelector('#editor-delete').onclick = () => {
+        if (!selectedKey) {
+            setStatus('Sélectionne une entrée à supprimer.', true);
+            return;
+        }
+        const ok = confirm(`Supprimer l’entrée ${selectedKey} ?`);
+        if (!ok) return;
+        delete appsObj[selectedKey];
+        const next = sortedKeys(appsObj)[0] || null;
+        selectedKey = next;
+        setFormValue(next ? appsObj[next] : null);
+        renderList();
+        setStatus('Entrée supprimée (pense à Sauver).');
+    };
+
+    root.querySelector('#editor-save').onclick = async () => {
+        const record = getFormValue();
+        if (!record.appId || !record.application) {
+            setStatus('appId et application sont requis.', true);
+            return;
+        }
+
+        const key = record.appId;
+        appsObj[key] = record;
+        selectedKey = key;
+        renderList();
+
+        const ok = await window.api.saveAppsJson(appsObj);
+        if (!ok) {
+            setStatus('Erreur: impossible d’écrire le JSON.', true);
+            return;
+        }
+
+        setStatus('Sauvé ✔');
+    };
+
+    filter.oninput = () => renderList();
+
+    load();
+}
 
 /* ================= APPS / UI ================= */
 const container = document.getElementById('tiles');
@@ -231,38 +440,10 @@ function showSelectModal({ title, items, currentValue, onApply }) {
     select.focus();
 }
 
-function getJsonPath() {
-    return localStorage.getItem('jsonPath') || './list-apps.json';
-}
-
-function showPathConfig() {
-    const configDiv = document.createElement('div');
-    configDiv.style = 'text-align:center;margin:40px auto;max-width:400px;padding:24px;background:#222;border-radius:10px;box-shadow:0 2px 12px #0003;';
-    configDiv.innerHTML = `
-        <h3>Configurer le chemin du fichier JSON</h3>
-        <input id='jsonPathInput' type='text' value="${getJsonPath()}" style='width:70%;padding:8px;border-radius:5px;border:1px solid #888;font-size:1rem;'>
-        <button id='browseBtn' style='padding:7px 12px;margin-left:8px;border-radius:5px;background:#1976d2;color:#fff;border:none;font-size:1rem;cursor:pointer;'>Parcourir</button>
-        <br><br>
-        <button id='validateBtn' style='padding:7px 18px;border-radius:5px;background:#1976d2;color:#fff;border:none;font-size:1rem;cursor:pointer;'>Valider</button>
-    `;
-    document.body.innerHTML = '';
-    document.body.appendChild(configDiv);
-
-    document.getElementById('browseBtn').onclick = async () => {
-        const file = await window.api.openFileDialog();
-        if (file) document.getElementById('jsonPathInput').value = file;
-    };
-    document.getElementById('validateBtn').onclick = () => {
-        localStorage.setItem('jsonPath', document.getElementById('jsonPathInput').value);
-        location.reload();
-    };
-}
-
 async function refreshTiles() {
     try {
-        const response = await fetch(getJsonPath());
-        const data = await response.json();
-        allApps = Object.values(data);
+        const data = window.api?.getAppsJson ? await window.api.getAppsJson() : {};
+        allApps = Object.values(normalizeAppsObject(data));
 
         onlineVersionsPromise = null;
         onlineVersionsCache = null;
@@ -287,7 +468,7 @@ if (refreshBtn) {
 }
 
 /* ---------- IPC LISTENERS ---------- */
-if (window.api?.onImportJson) window.api.onImportJson(showPathConfig);
+if (window.api?.onImportJson) window.api.onImportJson(showAppsEditor);
 if (window.api?.onToggleSearch) window.api.onToggleSearch(() => {
     searchVisible = !searchVisible;
     searchBarContainer.style.display = searchVisible ? '' : 'none';
@@ -442,6 +623,23 @@ function extractMajor(versionLike) {
     return m ? Number(m[1]) : null;
 }
 
+function cleanSemverRange(range) {
+    if (!range) return range;
+    return String(range)
+        .trim()
+        .replace(/^(\^|~|>=|<=|>|<|=)\s*/g, '');
+}
+
+function renderUpdateIconSvg(title) {
+    const safeTitle = (title || '').replace(/"/g, '&quot;');
+    return `
+        <svg class='update-indicator' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#ffd54f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' title="${safeTitle}">
+            <path d='M12 19V5'></path>
+            <path d='M7 10l5-5 5 5'></path>
+        </svg>
+    `;
+}
+
 function getDepVersion(pkg, depName) {
     if (!pkg || !depName) return null;
     const deps = pkg.dependencies || {};
@@ -511,6 +709,8 @@ async function populateTileVersions(tile, app, exists) {
         const localVersion = getDepVersion(pkgJson, npmPkg);
         if (!localVersion) continue;
 
+        const displayLocalVersion = cleanSemverRange(localVersion);
+
         const latest = npmLatest[npmPkg] || null;
         const localMajor = extractMajor(localVersion);
         const latestMajor = extractMajor(latest);
@@ -518,14 +718,14 @@ async function populateTileVersions(tile, app, exists) {
 
         const label = fwName;
         const title = latest
-            ? (update ? `Update dispo: ${localVersion} → ${latest}` : `À jour (latest: ${latest})`)
-            : `Version locale: ${localVersion}`;
+            ? (update ? `Update dispo: ${displayLocalVersion} → ${latest}` : `À jour (latest: ${latest})`)
+            : `Version locale: ${displayLocalVersion}`;
 
         rows.push(
             `<div class='version-item' title="${title.replace(/"/g, '&quot;')}">` +
                 `<span class='version-label'>${label}</span>` +
-                `<span class='version-value'>${localVersion}</span>` +
-                (update ? `<span class='update-indicator' title='Update disponible'></span>` : ``) +
+                `<span class='version-value'>${displayLocalVersion}</span>` +
+                (update ? renderUpdateIconSvg('Update disponible') : ``) +
             `</div>`
         );
     }
@@ -542,7 +742,7 @@ async function populateTileVersions(tile, app, exists) {
             `<div class='version-item' title="${title.replace(/"/g, '&quot;')}">` +
                 `<span class='version-label'>Node</span>` +
                 `<span class='version-value'>${nodeEngine}</span>` +
-                (nodeUpdate ? `<span class='update-indicator' title='LTS plus récente dispo'></span>` : ``) +
+                (nodeUpdate ? renderUpdateIconSvg('LTS plus récente dispo') : ``) +
             `</div>`
         );
     }
@@ -806,8 +1006,17 @@ async function renderTiles(apps) {
 
 /* ---------- INIT ---------- */
 
-if (!localStorage.getItem('jsonPath')) showPathConfig();
-else refreshTiles();
+refreshTiles();
+
+if (window.api?.onOpenConfigJson) {
+    window.api.onOpenConfigJson(async () => {
+        if (!window.api?.openJsonFile || !window.api?.getAppsJsonPath) return;
+        const jsonPath = await window.api.getAppsJsonPath();
+        if (!jsonPath) return alert("Impossible de résoudre le chemin du JSON.");
+        const ok = await window.api.openJsonFile(jsonPath);
+        if (!ok) alert("Impossible d’ouvrir le fichier JSON.");
+    });
+}
 
 searchBar?.addEventListener('input', () => refreshRender());
 </script>

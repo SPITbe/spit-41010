@@ -19,7 +19,8 @@ Application Electron pour ouvrir rapidement vos projets (frontend/backend) dans 
 - Lancement instantané de VSCode sur vos dossiers frontend/backend
 - Accès direct aux dépôts GitHub associés
 - Interface moderne, responsive et personnalisable
-- Sélecteur de fichier JSON de configuration (Ctrl+J)
+- Édition de la liste embarquée (Ctrl+I)
+- Ouverture rapide du JSON (Ctrl+E)
 - Affichage dynamique des boutons selon l'existence des dossiers
 - Affichage de la version de l'app (VER)
 - Support multi-plateforme (Windows, Linux, Mac)
@@ -61,7 +62,7 @@ L'application s'ouvre automatiquement. Configurez le chemin du fichier JSON au p
 ---
 
 
-## ⚙️ Configuration du fichier JSON
+## ⚙️ Configuration du fichier JSON (embarqué)
 
 Le fichier de configuration doit être un JSON de la forme :
 
@@ -82,7 +83,8 @@ Le fichier de configuration doit être un JSON de la forme :
 }
 ```
 
-- Placez ce fichier où vous voulez, puis sélectionnez-le dans l'app (Ctrl+J).
+- La liste est embarquée et sauvegardée dans le dossier utilisateur Electron (modif via **Ctrl+I**).
+- Vous pouvez ouvrir le fichier JSON directement via **Ctrl+E**.
 - Par défaut, les dossiers VSCode doivent suivre la convention `spit-<appId>-frontend`, `spit-<appId>-backend` ou simplement `spit-<appId>`,
   et être placés dans le dossier parent configuré dans le code (exemple : `D:/GitHub/`, mais ce chemin est personnalisable selon vos besoins).
 

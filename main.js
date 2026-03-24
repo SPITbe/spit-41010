@@ -16,6 +16,28 @@ try {
 let mainWindow = null;
 let idGenWindow = null;
 
+const EMBEDDED_APPS_JSON_NAME = 'list-apps.json';
+
+function getEmbeddedAppsJsonPath() {
+    return path.join(app.getPath('userData'), EMBEDDED_APPS_JSON_NAME);
+}
+
+function ensureEmbeddedAppsJsonExists() {
+    try {
+        const target = getEmbeddedAppsJsonPath();
+        if (fs.existsSync(target)) return;
+
+        const seed = path.join(__dirname, 'list-apps.json');
+        if (fs.existsSync(seed)) {
+            fs.copyFileSync(seed, target);
+        } else {
+            fs.writeFileSync(target, JSON.stringify({}, null, 2), 'utf8');
+        }
+    } catch {
+        // Best effort
+    }
+}
+
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 900,
@@ -46,9 +68,14 @@ const toolMenu = Menu.buildFromTemplate([
         label: 'Fichier',
         submenu: [
             {
-                label: 'Importer liste json',
+                label: 'Éditer la liste',
                 accelerator: 'CmdOrCtrl+I',
                 click: () => safeSend('import-json')
+            },
+            {
+                label: 'Ouvrir le JSON courant',
+                accelerator: 'CmdOrCtrl+E',
+                click: () => safeSend('open-config-json')
             },
             {
                 label: 'Basculer la recherche',
@@ -150,6 +177,65 @@ ipcMain.handle('save-apps-root', async (_, appsRoot) => {
     try {
         const configPath = path.join(app.getPath('userData'), 'spitconfig.json');
         fs.writeFileSync(configPath, JSON.stringify({ appsRoot }, null, 2), 'utf8');
+        return true;
+    } catch {
+        return false;
+    }
+});
+
+ipcMain.handle('get-apps-json', async () => {
+    try {
+        ensureEmbeddedAppsJsonExists();
+        const p = getEmbeddedAppsJsonPath();
+        const raw = fs.readFileSync(p, 'utf8');
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+        return {};
+    }
+});
+
+ipcMain.handle('save-apps-json', async (_, { data }) => {
+    try {
+        if (!data || typeof data !== 'object') return false;
+        ensureEmbeddedAppsJsonExists();
+        const p = getEmbeddedAppsJsonPath();
+        fs.writeFileSync(p, JSON.stringify(data, null, 2), 'utf8');
+        return true;
+    } catch {
+        return false;
+    }
+});
+
+ipcMain.handle('get-apps-json-path', async () => {
+    try {
+        ensureEmbeddedAppsJsonExists();
+        return getEmbeddedAppsJsonPath();
+    } catch {
+        return null;
+    }
+});
+
+ipcMain.handle('open-json-file', async (_, { jsonPath }) => {
+    try {
+        if (typeof jsonPath !== 'string' || !jsonPath.trim()) return false;
+
+        const input = jsonPath.trim();
+        const resolved = path.isAbsolute(input)
+            ? input
+            : path.resolve(__dirname, input);
+
+        if (!fs.existsSync(resolved)) {
+            return false;
+        }
+
+        // Prefer opening in VS Code if available, fallback to default app.
+        exec(`code "${resolved}"`, (err) => {
+            if (err) {
+                shell.openPath(resolved);
+            }
+        });
+
         return true;
     } catch {
         return false;
@@ -349,6 +435,7 @@ function openIdGeneratorWindow() {
 /* ================= APP LIFECYCLE ================= */
 
 app.whenReady().then(createWindow);
+app.whenReady().then(ensureEmbeddedAppsJsonExists);
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();

@@ -34,7 +34,7 @@ contextBridge.exposeInMainWorld('api', {
     openExternal: (url) => {
         if (typeof url !== 'string') return;
         ipcRenderer.send('open-external', url);
-},
+    },
     /* ========= ASYNC ========= */
 
     checkDirs(appId) {
@@ -63,6 +63,22 @@ contextBridge.exposeInMainWorld('api', {
 
     getOnlineVersions({ npmPackages, includeNodeLts } = {}) {
         return ipcRenderer.invoke('get-online-versions', { npmPackages, includeNodeLts });
+    },
+
+    openJsonFile(jsonPath) {
+        return ipcRenderer.invoke('open-json-file', { jsonPath });
+    },
+
+    getAppsJson() {
+        return ipcRenderer.invoke('get-apps-json');
+    },
+
+    saveAppsJson(data) {
+        return ipcRenderer.invoke('save-apps-json', { data });
+    },
+
+    getAppsJsonPath() {
+        return ipcRenderer.invoke('get-apps-json-path');
     },
 
     /* ========= EVENTS ========= */
@@ -101,5 +117,11 @@ contextBridge.exposeInMainWorld('api', {
         const listener = () => callback();
         ipcRenderer.on('filter-clear', listener);
         return () => ipcRenderer.removeListener('filter-clear', listener);
+    },
+
+    onOpenConfigJson(callback) {
+        const listener = () => callback();
+        ipcRenderer.on('open-config-json', listener);
+        return () => ipcRenderer.removeListener('open-config-json', listener);
     }
 });
