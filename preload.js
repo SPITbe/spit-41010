@@ -16,8 +16,14 @@ contextBridge.exposeInMainWorld('api', {
         ipcRenderer.send('open-vscode', folder);
     },
 
-    buildApp: (appId, framework) => {
-        ipcRenderer.send('build-app', appId, framework); 
+    buildApp: (payloadOrAppId, framework) => {
+        if (payloadOrAppId && typeof payloadOrAppId === 'object') {
+            ipcRenderer.send('build-app', payloadOrAppId);
+            return;
+        }
+
+        if (typeof payloadOrAppId !== 'string') return;
+        ipcRenderer.send('build-app', { appId: payloadOrAppId, framework });
     },
     
     openAppFolder: (folder) => {
@@ -49,6 +55,14 @@ contextBridge.exposeInMainWorld('api', {
 
     saveAppsRoot(appsRoot) {
         return ipcRenderer.invoke('save-apps-root', appsRoot);
+    },
+
+    getLocalProjectPackages(appId) {
+        return ipcRenderer.invoke('get-local-project-packages', { appId });
+    },
+
+    getOnlineVersions({ npmPackages, includeNodeLts } = {}) {
+        return ipcRenderer.invoke('get-online-versions', { npmPackages, includeNodeLts });
     },
 
     /* ========= EVENTS ========= */

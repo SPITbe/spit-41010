@@ -98,6 +98,24 @@ let searchVisible = false;
 let activeFrameworkFilter = '';
 let activeClientFilter = '';
 
+let onlineVersionsPromise = null;
+let onlineVersionsCache = null;
+
+const FRAMEWORK_TO_NPM = {
+    angular: '@angular/core',
+    react: 'react',
+    vue: 'vue',
+    nuxt: 'nuxt',
+    electron: 'electron',
+    express: 'express',
+    nestjs: '@nestjs/core',
+    fastify: 'fastify',
+    'discord.js': 'discord.js',
+    discordjs: 'discord.js'
+};
+
+const BACKEND_FRAMEWORKS = new Set(['express', 'nestjs', 'fastify']);
+
 function getFrameworkNames(app) {
     if (!app) return [];
     if (Array.isArray(app.frameworks)) {
@@ -245,6 +263,11 @@ async function refreshTiles() {
         const response = await fetch(getJsonPath());
         const data = await response.json();
         allApps = Object.values(data);
+
+        onlineVersionsPromise = null;
+        onlineVersionsCache = null;
+        primeOnlineVersions();
+
         refreshRender();
     } catch (err) {
         container.innerHTML = `<div style='color:red;text-align:center;margin:40px;'>Erreur : ${err.message}</div>`;
@@ -413,6 +436,120 @@ function getFrameworkForMode(app, mode) {
     );
 }
 
+function extractMajor(versionLike) {
+    if (!versionLike) return null;
+    const m = String(versionLike).match(/(\d{1,3})(?:\.(\d+))?(?:\.(\d+))?/);
+    return m ? Number(m[1]) : null;
+}
+
+function getDepVersion(pkg, depName) {
+    if (!pkg || !depName) return null;
+    const deps = pkg.dependencies || {};
+    const devDeps = pkg.devDependencies || {};
+    return deps[depName] || devDeps[depName] || null;
+}
+
+function normalizeFrameworkName(name) {
+    return (name || '').toString().trim().toLowerCase();
+}
+
+function primeOnlineVersions() {
+    if (!window.api?.getOnlineVersions) return;
+    if (onlineVersionsPromise) return;
+
+    const npmPackages = new Set();
+    for (const app of allApps) {
+        for (const fw of getFrameworkNames(app)) {
+            const key = normalizeFrameworkName(fw);
+            const pkg = FRAMEWORK_TO_NPM[key];
+            if (pkg) npmPackages.add(pkg);
+        }
+    }
+
+    onlineVersionsPromise = window.api
+        .getOnlineVersions({ npmPackages: Array.from(npmPackages), includeNodeLts: true })
+        .then((res) => {
+            onlineVersionsCache = res || { npmLatest: {}, nodeLts: null };
+            return onlineVersionsCache;
+        })
+        .catch(() => {
+            onlineVersionsCache = { npmLatest: {}, nodeLts: null };
+            return onlineVersionsCache;
+        });
+}
+
+async function populateTileVersions(tile, app, exists) {
+    const target = tile.querySelector('.tile-versions');
+    if (!target || !window.api?.getLocalProjectPackages) return;
+
+    target.innerHTML = '';
+
+    const local = await window.api.getLocalProjectPackages(app.appId);
+    if (!local) return;
+
+    const online = onlineVersionsPromise ? await onlineVersionsPromise : onlineVersionsCache;
+    const npmLatest = online && online.npmLatest ? online.npmLatest : {};
+    const nodeLts = online ? online.nodeLts : null;
+    const nodeLtsMajor = extractMajor(nodeLts);
+
+    const frameworks = getFrameworkNames(app);
+    const seen = new Set();
+
+    const rows = [];
+
+    for (const fwName of frameworks) {
+        const fwKey = normalizeFrameworkName(fwName);
+        const npmPkg = FRAMEWORK_TO_NPM[fwKey];
+        if (!npmPkg || seen.has(npmPkg)) continue;
+        seen.add(npmPkg);
+
+        const isBackend = BACKEND_FRAMEWORKS.has(fwKey);
+        const pkgJson = isBackend
+            ? (local.backend?.packageJson || local.root?.packageJson)
+            : (local.frontend?.packageJson || local.root?.packageJson);
+
+        const localVersion = getDepVersion(pkgJson, npmPkg);
+        if (!localVersion) continue;
+
+        const latest = npmLatest[npmPkg] || null;
+        const localMajor = extractMajor(localVersion);
+        const latestMajor = extractMajor(latest);
+        const update = localMajor != null && latestMajor != null && localMajor < latestMajor;
+
+        const label = fwName;
+        const title = latest
+            ? (update ? `Update dispo: ${localVersion} → ${latest}` : `À jour (latest: ${latest})`)
+            : `Version locale: ${localVersion}`;
+
+        rows.push(
+            `<div class='version-item' title="${title.replace(/"/g, '&quot;')}">` +
+                `<span class='version-label'>${label}</span>` +
+                `<span class='version-value'>${localVersion}</span>` +
+                (update ? `<span class='update-indicator' title='Update disponible'></span>` : ``) +
+            `</div>`
+        );
+    }
+
+    const nodePkg = (exists.backend ? (local.backend?.packageJson || local.root?.packageJson) : (local.root?.packageJson || local.frontend?.packageJson));
+    const nodeEngine = nodePkg && nodePkg.engines ? nodePkg.engines.node : null;
+    const nodeEngineMajor = extractMajor(nodeEngine);
+    const nodeUpdate = nodeEngineMajor != null && nodeLtsMajor != null && nodeEngineMajor < nodeLtsMajor;
+    if (nodeEngine) {
+        const title = nodeLts
+            ? (nodeUpdate ? `Node LTS: ${nodeLts}` : `Node LTS: ${nodeLts}`)
+            : 'Version Node (engines)';
+        rows.push(
+            `<div class='version-item' title="${title.replace(/"/g, '&quot;')}">` +
+                `<span class='version-label'>Node</span>` +
+                `<span class='version-value'>${nodeEngine}</span>` +
+                (nodeUpdate ? `<span class='update-indicator' title='LTS plus récente dispo'></span>` : ``) +
+            `</div>`
+        );
+    }
+
+    target.innerHTML = rows.join('');
+}
+
 /* ---------- RENDER TILES (avec frontend/backend/root) ---------- */
 async function renderTiles(apps) {
     container.innerHTML = '';
@@ -478,10 +615,11 @@ async function renderTiles(apps) {
             'discord.js': {color:'5865F2',logo:'discord',logoColor:'white'},
             'discordjs': {color:'5865F2',logo:'discord',logoColor:'white'},
             'discord': {color:'5865F2',logo:'discord',logoColor:'white'},
+            'nitro': {color:'00DC82',logo:'nuxt',logoColor:'white'},
             'express': {color:'000000',logo:'express'},
             'nestjs': {color:'e0234e',logo:'nestjs'},
             'nextjs': {color:'000000',logo:'nextdotjs'},
-            'nuxt': {color:'00c58e',logo:'nuxtdotjs'},
+            'nuxt': {color:'00c58e',logo:'nuxt',logoColor:'white'},
             'python': {color:'3776AB',logo:'python'},
             'django': {color:'092e20',logo:'django'},
             'flask': {color:'000000',logo:'flask'},
@@ -522,13 +660,15 @@ async function renderTiles(apps) {
             <div class='tile-main'>
                 <h3 class='tile-title'${app.siteUrl ? ` title="Ouvrir navigateur" style="cursor:pointer;text-decoration:underline dotted;"` : ''}>${app.application}</h3>
                 <span class='badge'>spit-${app.appId}</span>
-                <div class='btn-group'>${vscodeBtns}</div>
-                <div class='btn-group'>${githubBtns}</div>
-                <div class='btn-group'>${folderBtns}</div>
+                <div class='tile-versions' aria-label='Versions'></div>
+                <div class='tile-actions'>${vscodeBtns}${githubBtns}${folderBtns}</div>
             </div>
             <div class='tile-footer'>${frameworkBadges.join('')}</div>
         `;
         container.appendChild(tile);
+
+        // Non-bloquant: remplit les versions dès que dispo
+        populateTileVersions(tile, app, exists);
 
             setTimeout(() => {
                 const buildBtn = tile.querySelector('.build-btn');

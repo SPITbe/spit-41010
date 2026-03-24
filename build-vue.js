@@ -3,10 +3,10 @@ const path = require('path')
 const fs = require('fs')
 const archiver = require('archiver')
 const { spawn } = require('child_process')
+const { resolveProjectDir } = require('./apps-root')
 
 module.exports = async function buildVue(appId, win) {
-  const basePath = 'D:/GitHub/'
-  const appDir = path.join(basePath, `spit-${appId}`)
+  const appDir = resolveProjectDir(appId)
   const pkgPath = path.join(appDir, 'package.json')
 
   if (!fs.existsSync(pkgPath)) {

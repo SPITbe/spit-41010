@@ -1,12 +1,11 @@
 const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require('electron');
 const path = require('path');
-const { exec, spawn } = require('child_process');
+const { exec } = require('child_process');
 const fs = require('fs');
-const archiver = require('archiver');
-const open = require('open'); 
+const https = require('https');
+const open = require('open');
 
-const PROJECT_PREFIX = process.env.PROJECT_PREFIX || 'spit-';
-const BASE_DIR = process.env.SPIT_BASE_DIR || 'D:/GitHub/';
+const { resolveProjectDir } = require('./apps-root');
 
 let version = '';
 try {
@@ -117,7 +116,7 @@ Menu.setApplicationMenu(toolMenu);
 ipcMain.handle('get-version', () => version);
 
 ipcMain.on('open-vscode', (_, folder) => {
-    const absolutePath = path.join(BASE_DIR, `${PROJECT_PREFIX}${folder}`);
+        const absolutePath = resolveProjectDir(folder);
     exec(`code "${absolutePath}"`, err => {
         if (err) {
             dialog.showErrorBox('Erreur VS Code', 'Impossible d’ouvrir VS Code.');
@@ -126,11 +125,11 @@ ipcMain.on('open-vscode', (_, folder) => {
 });
 
 ipcMain.handle('check-dirs', (_, appId) => {
-  const root = path.join(BASE_DIR, `${PROJECT_PREFIX}${appId}`);
+    const root = resolveProjectDir(appId);
   return {
     root: fs.existsSync(root),
-    frontend: fs.existsSync(`${root}-frontend`),
-    backend: fs.existsSync(`${root}-backend`)
+        frontend: fs.existsSync(`${root}-frontend`),
+        backend: fs.existsSync(`${root}-backend`)
   };
 });
 
@@ -164,7 +163,7 @@ ipcMain.on('open-github', (_, url) => {
 });
 
 ipcMain.on('open-app-folder', (_, folder) => {
-    const absolutePath = path.join(BASE_DIR, `${PROJECT_PREFIX}${folder}`);
+    const absolutePath = resolveProjectDir(folder);
     shell.openPath(absolutePath);
 });
 
@@ -197,6 +196,129 @@ ipcMain.on('build-app', async (_, { appId, framework }) => {
   } catch (e) {
     dialog.showErrorBox('Erreur', e.message);
   }
+});
+
+/* ================= VERSION CHECK (LOCAL + ONLINE) ================= */
+
+function readJsonFileSafe(filePath) {
+    try {
+        if (!fs.existsSync(filePath)) return null;
+        const raw = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+
+function readPackageJsonSafe(projectDir) {
+    const pkgPath = path.join(projectDir, 'package.json');
+    const pkg = readJsonFileSafe(pkgPath);
+    if (!pkg) return null;
+    return {
+        name: pkg.name,
+        version: pkg.version,
+        engines: pkg.engines,
+        dependencies: pkg.dependencies,
+        devDependencies: pkg.devDependencies
+    };
+}
+
+ipcMain.handle('get-local-project-packages', (_, { appId }) => {
+    if (typeof appId !== 'string' || !appId.trim()) return null;
+
+    const rootDir = resolveProjectDir(appId);
+    const frontendDir = resolveProjectDir(`${appId}-frontend`);
+    const backendDir = resolveProjectDir(`${appId}-backend`);
+
+    return {
+        root: {
+            dir: rootDir,
+            exists: fs.existsSync(rootDir),
+            packageJson: readPackageJsonSafe(rootDir)
+        },
+        frontend: {
+            dir: frontendDir,
+            exists: fs.existsSync(frontendDir),
+            packageJson: readPackageJsonSafe(frontendDir)
+        },
+        backend: {
+            dir: backendDir,
+            exists: fs.existsSync(backendDir),
+            packageJson: readPackageJsonSafe(backendDir)
+        }
+    };
+});
+
+function httpsGetJson(url) {
+    return new Promise((resolve, reject) => {
+        const req = https.get(url, {
+            headers: {
+                'User-Agent': 'SPIT-Launcher'
+            }
+        }, (res) => {
+            let data = '';
+            res.on('data', (chunk) => (data += chunk));
+            res.on('end', () => {
+                if (res.statusCode && res.statusCode >= 400) {
+                    return reject(new Error(`HTTP ${res.statusCode}`));
+                }
+                try {
+                    resolve(JSON.parse(data));
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+
+        req.on('error', reject);
+        req.setTimeout(6500, () => {
+            req.destroy(new Error('timeout'));
+        });
+    });
+}
+
+async function fetchNpmLatest(pkgName) {
+    const encoded = encodeURIComponent(pkgName).replace(/^%40/, '%40').replace(/%2F/g, '%2F');
+    const url = `https://registry.npmjs.org/${encoded}`;
+    const json = await httpsGetJson(url);
+    const latest = json && json['dist-tags'] ? json['dist-tags'].latest : null;
+    return typeof latest === 'string' ? latest : null;
+}
+
+async function fetchNodeLts() {
+    const url = 'https://nodejs.org/dist/index.json';
+    const json = await httpsGetJson(url);
+    if (!Array.isArray(json)) return null;
+
+    const firstLts = json.find(e => e && e.lts);
+    if (!firstLts || typeof firstLts.version !== 'string') return null;
+    return firstLts.version; // ex: "v22.11.0"
+}
+
+ipcMain.handle('get-online-versions', async (_, { npmPackages, includeNodeLts }) => {
+    const uniquePkgs = Array.isArray(npmPackages)
+        ? Array.from(new Set(npmPackages.filter(p => typeof p === 'string' && p.trim()).map(p => p.trim())))
+        : [];
+
+    const npmLatest = {};
+    await Promise.all(uniquePkgs.map(async (pkg) => {
+        try {
+            npmLatest[pkg] = await fetchNpmLatest(pkg);
+        } catch {
+            npmLatest[pkg] = null;
+        }
+    }));
+
+    let nodeLts = null;
+    if (includeNodeLts) {
+        try {
+            nodeLts = await fetchNodeLts();
+        } catch {
+            nodeLts = null;
+        }
+    }
+
+    return { npmLatest, nodeLts };
 });
 
 

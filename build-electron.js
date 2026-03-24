@@ -2,10 +2,10 @@ const { dialog, shell } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { resolveProjectDir } = require('./apps-root');
 
 module.exports = async function buildElectron(appId, win) {
-    const basePath = 'D:/GitHub/';
-    const appDir = path.join(basePath, `spit-${appId}`);
+    const appDir = resolveProjectDir(appId);
     const pkgPath = path.join(appDir, 'package.json');
 
     if (!fs.existsSync(pkgPath)) {
