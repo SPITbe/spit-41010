@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.18.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.17.0...spit-41010-v1.18.0) (2026-03-24)
+
+
+### Features
+
+* update Node.js version to 24 in release workflow ([3efbab7](https://github.com/SPITbe/spit-41010/commit/3efbab7b02df802553e4669a95bd1c05f722e5bc))
+* update version to 2.1.0 in package.json ([2559f05](https://github.com/SPITbe/spit-41010/commit/2559f058820bcae1537a4611d56c78aefdd9ba62))
+
 ## [1.17.0](https://github.com/SPITbe/spit-41010/compare/spit-41010-v1.16.0...spit-41010-v1.17.0) (2026-03-24)
 
 
