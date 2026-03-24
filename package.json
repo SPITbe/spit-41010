@@ -20,8 +20,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "electron": "^39.2.7",
-    "electron-builder": "^26.0.12"
+    "electron": "^41.0.3",
+    "electron-builder": "^26.8.1"
   },
   "build": {
     "appId": "be.spit.spit-launcher",
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "archiver": "^7.0.1",
-    "inquirer": "^13.1.0",
+    "inquirer": "^13.3.2",
     "open": "^11.0.0"
   }
 }
