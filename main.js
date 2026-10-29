@@ -104,6 +104,12 @@ const toolMenu = Menu.buildFromTemplate([
                 accelerator: 'CmdOrCtrl+Alt+C',
                 click: () => safeSend('filter-client')
             },
+            {
+                label: 'Voir les éléments masqués',
+                type: 'checkbox',
+                checked: false,
+                click: (item) => safeSend('show-hidden-items', item.checked)
+            },
             { type: 'separator' },
             {
                 label: 'Réinitialiser le filtre',
@@ -153,11 +159,13 @@ ipcMain.on('open-vscode', (_, folder) => {
 
 ipcMain.handle('check-dirs', (_, appId) => {
     const root = resolveProjectDir(appId);
-  return {
-    root: fs.existsSync(root),
-        frontend: fs.existsSync(`${root}-frontend`),
-        backend: fs.existsSync(`${root}-backend`)
-  };
+    const frontend = resolveProjectDir(`${appId}-frontend`);
+    const backend = resolveProjectDir(`${appId}-backend`);
+    return {
+        root: fs.existsSync(root),
+        frontend: fs.existsSync(frontend),
+        backend: fs.existsSync(backend)
+    };
 });
 
 ipcMain.handle('open-folder-dialog', async () => {

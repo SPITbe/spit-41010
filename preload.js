@@ -119,6 +119,12 @@ contextBridge.exposeInMainWorld('api', {
         return () => ipcRenderer.removeListener('filter-clear', listener);
     },
 
+    onShowHiddenItems(callback) {
+        const listener = (_, visible) => callback(visible);
+        ipcRenderer.on('show-hidden-items', listener);
+        return () => ipcRenderer.removeListener('show-hidden-items', listener);
+    },
+
     onOpenConfigJson(callback) {
         const listener = () => callback();
         ipcRenderer.on('open-config-json', listener);

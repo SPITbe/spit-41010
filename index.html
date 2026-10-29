@@ -7,17 +7,16 @@
 </head>
 <body>
 
-
-<h2 style="display:flex;align-items:center;justify-content:center;gap:16px;">
-    <img src="icon.png" alt="Logo SPIT" style="height:44px;width:44px;">
-    SPIT Launcher
-    <button id="refresh-btn" title="Rafraîchir" style="background:none;border:none;cursor:pointer;padding:0 0 0 8px;display:flex;align-items:center;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+<header class="app-topbar">
+    <img class="brand-logo" src="logo-spit.png" alt="SPIT">
+    <h1 class="app-name">SPIT Launcher</h1>
+    <button id="refresh-btn" title="Rafraîchir" aria-label="Rafraîchir" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
             <path d="M4.93 19.07A10 10 0 1 1 12 22v-4"/>
             <polyline points="23 4 23 10 17 10"/>
         </svg>
     </button>
-</h2>
+</header>
 
 <div id="search-bar-container" style="display:none;text-align:center;margin-top:24px;">
     <input id="search-bar" type="text" placeholder="Rechercher par nom, appId ou clientId..."
@@ -70,10 +69,7 @@ function showAppsEditor() {
     root.style.cssText = 'max-width:1100px;margin:28px auto 40px; padding:0 16px;';
 
     root.innerHTML = `
-        <h2 style="display:flex;align-items:center;justify-content:center;gap:16px;">
-            <img src="icon.png" alt="Logo SPIT" style="height:44px;width:44px;">
-            Éditeur de liste
-        </h2>
+                <h2 class="editor-title" style="display:flex;align-items:center;justify-content:center;gap:16px;"><img src="icon.png" alt="Logo SPIT" style="height:44px;width:44px;"> Éditeur de liste</h2>
 
         <div style="display:flex;justify-content:center;gap:10px;margin:18px 0 8px;flex-wrap:wrap;">
             <button id="editor-back" style="padding:8px 14px;border-radius:8px;border:1px solid #555;background:#2a2a2a;color:#fff;cursor:pointer;">Retour</button>
@@ -306,6 +302,8 @@ let allApps = [];
 let searchVisible = false;
 let activeFrameworkFilter = '';
 let activeClientFilter = '';
+let showHiddenItems = false;
+const hiddenAppIds = new Set(JSON.parse(localStorage.getItem('spit-hidden-apps') || '[]'));
 
 let onlineVersionsPromise = null;
 let onlineVersionsCache = null;
@@ -338,6 +336,7 @@ function getFrameworkNames(app) {
 
 function getFilteredApps() {
     let apps = [...allApps];
+    if (!showHiddenItems) apps = apps.filter(app => !hiddenAppIds.has(app.appId));
 
     if (activeFrameworkFilter) {
         const target = activeFrameworkFilter.toLowerCase();
@@ -521,6 +520,11 @@ if (window.api?.onFilterClear) window.api.onFilterClear(() => {
     refreshRender();
 });
 
+if (window.api?.onShowHiddenItems) window.api.onShowHiddenItems((visible) => {
+    showHiddenItems = Boolean(visible);
+    refreshRender();
+});
+
 /* ---------- HELPERS ---------- */
 let loadingTimer = null;
 
@@ -665,7 +669,7 @@ function primeOnlineVersions() {
     }
 
     onlineVersionsPromise = window.api
-        .getOnlineVersions({ npmPackages: Array.from(npmPackages), includeNodeLts: true })
+        .getOnlineVersions({ npmPackages: Array.from(npmPackages), includeNodeLts: false })
         .then((res) => {
             onlineVersionsCache = res || { npmLatest: {}, nodeLts: null };
             return onlineVersionsCache;
@@ -687,9 +691,6 @@ async function populateTileVersions(tile, app, exists) {
 
     const online = onlineVersionsPromise ? await onlineVersionsPromise : onlineVersionsCache;
     const npmLatest = online && online.npmLatest ? online.npmLatest : {};
-    const nodeLts = online ? online.nodeLts : null;
-    const nodeLtsMajor = extractMajor(nodeLts);
-
     const frameworks = getFrameworkNames(app);
     const seen = new Set();
 
@@ -730,23 +731,6 @@ async function populateTileVersions(tile, app, exists) {
         );
     }
 
-    const nodePkg = (exists.backend ? (local.backend?.packageJson || local.root?.packageJson) : (local.root?.packageJson || local.frontend?.packageJson));
-    const nodeEngine = nodePkg && nodePkg.engines ? nodePkg.engines.node : null;
-    const nodeEngineMajor = extractMajor(nodeEngine);
-    const nodeUpdate = nodeEngineMajor != null && nodeLtsMajor != null && nodeEngineMajor < nodeLtsMajor;
-    if (nodeEngine) {
-        const title = nodeLts
-            ? (nodeUpdate ? `Node LTS: ${nodeLts}` : `Node LTS: ${nodeLts}`)
-            : 'Version Node (engines)';
-        rows.push(
-            `<div class='version-item' title="${title.replace(/"/g, '&quot;')}">` +
-                `<span class='version-label'>Node</span>` +
-                `<span class='version-value'>${nodeEngine}</span>` +
-                (nodeUpdate ? renderUpdateIconSvg('LTS plus récente dispo') : ``) +
-            `</div>`
-        );
-    }
-
     target.innerHTML = rows.join('');
 }
 
@@ -756,7 +740,9 @@ async function renderTiles(apps) {
     for (const app of apps) {
         const tile = document.createElement('div');
         tile.className = 'tile';
-        tile.style.backgroundColor = app.color || '#444';
+        tile.dataset.appId = app.appId;
+        tile.dataset.application = app.application;
+        tile.style.setProperty('--app-accent', app.color || '#32455B');
 
         function isLightColor(hex) {
             if (!hex) return false;
@@ -853,18 +839,71 @@ async function renderTiles(apps) {
         }
 
         tile.innerHTML = `
-            <div class='tile-header' style='display:flex;align-items:center;justify-content:space-between;'>
-                <a href='#' class='build-btn' title='Build'>📦</a>
-                ${toggleHtml}
+            <div class='tile-header' role='group' tabindex='0' aria-expanded='false' aria-controls='tile-content-${app.appId}' aria-label='Afficher le contenu de ${app.application}' style='display:flex;align-items:center;justify-content:space-between;'>
+                <span class='tile-summary'>${app.application}</span>
+                <a href='#' class='build-btn' title='Build' aria-label='Construire l’application'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='m12 2 9 5v10l-9 5-9-5V7l9-5Z'/><path d='m3.4 7.2 8.6 5 8.6-5M12 22V12.2M7.5 4.5l9 5.1'/></svg></a>
+                <div class='tile-tools'>
+                    <button type='button' class='tile-hide' aria-pressed='false' title='Masquer cette application' aria-label='Masquer cette application'><svg viewBox='0 0 24 24' aria-hidden='true'><path d='M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z'/><circle cx='12' cy='12' r='2.8'/></svg></button>
+                </div>
             </div>
+            <div class='tile-content' id='tile-content-${app.appId}'>
             <div class='tile-main'>
-                <h3 class='tile-title'${app.siteUrl ? ` title="Ouvrir navigateur" style="cursor:pointer;text-decoration:underline dotted;"` : ''}>${app.application}</h3>
                 <span class='badge'>spit-${app.appId}</span>
+                ${toggleHtml ? `<div class='tile-toggle-row'>${toggleHtml}</div>` : ''}
                 <div class='tile-versions' aria-label='Versions'></div>
-                <div class='tile-actions'>${vscodeBtns}${githubBtns}${folderBtns}</div>
+                <div class='tile-actions'>${vscodeBtns}${githubBtns}${folderBtns}${app.siteUrl ? `<button type='button' class='tile-url' title='Ouvrir le site web'><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='9'/><path d='M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18'/></svg><span>URL</span></button>` : ''}</div>
             </div>
             <div class='tile-footer'>${frameworkBadges.join('')}</div>
+            </div>
         `;
+        const hideButton = tile.querySelector('.tile-hide');
+        const isHidden = hiddenAppIds.has(app.appId);
+        hideButton.setAttribute('aria-pressed', String(isHidden));
+        hideButton.title = isHidden ? 'Afficher cette application' : 'Masquer cette application';
+        hideButton.setAttribute('aria-label', hideButton.title);
+        if (isHidden) hideButton.innerHTML = `<svg viewBox='0 0 24 24' aria-hidden='true'><path d='m3 3 18 18M10.6 6.2A10 10 0 0 1 12 6c6.1 0 9.5 6 9.5 6a16 16 0 0 1-3.2 3.8M6.2 6.2C3.8 7.7 2.5 12 2.5 12s3.4 6 9.5 6a9.7 9.7 0 0 0 3.1-.5'/></svg>`;
+        if (isHidden) tile.classList.add('is-hidden-item');
+        const accordionHeader = tile.querySelector('.tile-header');
+        tile.classList.add('is-collapsed');
+        accordionHeader.onclick = (event) => {
+            if (event.target.closest('a, button')) return;
+            const expandRow = tile.classList.contains('is-collapsed');
+            const rowTop = tile.getBoundingClientRect().top;
+            for (const rowTile of container.querySelectorAll('.tile')) {
+                if (Math.abs(rowTile.getBoundingClientRect().top - rowTop) > 1) continue;
+                rowTile.classList.toggle('is-collapsed', !expandRow);
+                const rowHeader = rowTile.querySelector('.tile-header');
+                rowHeader.setAttribute('aria-expanded', String(expandRow));
+                rowHeader.setAttribute('aria-label', `${expandRow ? 'Masquer' : 'Afficher'} le contenu de ${rowTile.dataset.application}`);
+            }
+        };
+        accordionHeader.onkeydown = (event) => {
+            if (event.target !== accordionHeader || !['Enter', ' '].includes(event.key)) return;
+            event.preventDefault();
+            accordionHeader.click();
+        };
+        const urlButton = tile.querySelector('.tile-url');
+        if (urlButton) {
+            urlButton.onclick = () => {
+                if (window.api?.openExternal) window.api.openExternal(app.siteUrl);
+                else window.open(app.siteUrl, '_blank');
+            };
+        }
+        hideButton.onclick = () => {
+            const hidden = hiddenAppIds.has(app.appId);
+            if (hidden) hiddenAppIds.delete(app.appId);
+            else hiddenAppIds.add(app.appId);
+            localStorage.setItem('spit-hidden-apps', JSON.stringify([...hiddenAppIds]));
+            if (showHiddenItems) {
+                tile.classList.toggle('is-hidden-item', !hidden);
+                hideButton.setAttribute('aria-pressed', String(!hidden));
+                hideButton.title = hidden ? 'Masquer cette application' : 'Afficher cette application';
+                hideButton.setAttribute('aria-label', hideButton.title);
+                hideButton.innerHTML = hidden
+                    ? `<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z'/><circle cx='12' cy='12' r='2.8'/></svg>`
+                    : `<svg viewBox='0 0 24 24' aria-hidden='true'><path d='m3 3 18 18M10.6 6.2A10 10 0 0 1 12 6c6.1 0 9.5 6 9.5 6a16 16 0 0 1-3.2 3.8M6.2 6.2C3.8 7.7 2.5 12 2.5 12s3.4 6 9.5 6a9.7 9.7 0 0 0 3.1-.5'/></svg>`;
+            } else refreshRender();
+        };
         container.appendChild(tile);
 
         // Non-bloquant: remplit les versions dès que dispo
@@ -910,15 +949,6 @@ async function renderTiles(apps) {
 
                 }
             }, 0);
-
-            if (app.siteUrl) {
-                setTimeout(() => {
-                    const title = tile.querySelector('.tile-title');
-                    if (title) {
-                        title.onclick = () => window.api && window.api.openExternal ? window.api.openExternal(app.siteUrl) : window.open(app.siteUrl, '_blank');
-                    }
-                }, 0);
-            }
 
         if (exists.frontend && exists.backend) {
             setTimeout(() => {

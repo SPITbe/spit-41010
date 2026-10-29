@@ -28,7 +28,17 @@ function getProjectPrefix() {
 
 function resolveProjectDir(folder) {
   // folder: "<appId>", "<appId>-frontend", "<appId>-backend" ...
-  return path.join(getAppsRoot(), `${PROJECT_PREFIX}${folder}`);
+  const baseDir = getAppsRoot();
+  const variantMatch = /^(.*)-(frontend|backend)$/.exec(folder);
+  if (variantMatch) {
+    const [, appId, variant] = variantMatch;
+    const suffixedDir = path.join(baseDir, `${PROJECT_PREFIX}${folder}`);
+    const nestedDir = path.join(baseDir, `${PROJECT_PREFIX}${appId}`, variant);
+    if (fs.existsSync(suffixedDir)) return suffixedDir;
+    if (fs.existsSync(nestedDir)) return nestedDir;
+    return suffixedDir;
+  }
+  return path.join(baseDir, `${PROJECT_PREFIX}${folder}`);
 }
 
 module.exports = {
